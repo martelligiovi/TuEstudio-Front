@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
+import logo from '../assets/logo.png'
 
 export default function Header() {
   const navigate = useNavigate()
@@ -6,8 +7,9 @@ export default function Header() {
   return (
     <header className="bg-[#fdfbf7] border-b border-hairline sticky top-0 z-40 hidden md:block">
       <div className="flex justify-between items-center w-full px-6 py-4 max-w-content mx-auto">
-        <Link to="/" className="font-serif text-2xl font-bold text-coral">
-          TuEstudio
+        <Link to="/" className="flex items-center gap-2">
+          <img src={logo} alt="" className="h-8 w-auto" />
+          <span className="font-serif italic text-2xl font-bold text-primary">TuEstudio</span>
         </Link>
         <div className="flex items-center gap-4">
           <button

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import logo from '../assets/logo.png'
+import hero from '../assets/hero.png'
 
 type Mode = 'login' | 'register'
 type Role = 'student' | 'teacher'
@@ -73,7 +75,7 @@ export default function AuthPage() {
           {/* Imagen editorial */}
           <div className="hidden md:block md:w-1/2 relative bg-surface-dark">
             <img
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLaQ9m5XzPb8-mOqYjdeDQPy_YN5xtG3ovmHqFSqEFho6lCuLdsGLsUlg81yWUHLmMCcUAgHJFsVN1LnEoB_M6XcP0MJqQvBxlxHNqQyBf8m6-1DMMK7rXfHGPh3A8VzXCxw5MxJkR5mTFcG_VmhW2xqBr8RNPiRLmhqFKCckzCBZxhgU1x2LGr0U_yAhJrC9P2A-S6Z3kHESmHdCbhsrJ87-R3U0DtPGMaAnDHwEfnHaxIRSXmZaQr-ZD_kJVCQwrGU3dg"
+              src={hero}
               alt="Editorial"
               className="absolute inset-0 w-full h-full object-cover opacity-90"
             />
@@ -91,7 +93,8 @@ export default function AuthPage() {
             className="w-full md:w-1/2 flex items-center justify-center px-10 py-10 bg-canvas"
           >
             <div className="w-full max-w-sm">
-              <div className="mb-10">
+              <div className="mb-5 flex items-center gap-2">
+                <img src={logo} alt="" className="h-8 w-auto" />
                 <span className="font-serif italic text-2xl font-bold text-primary">TuEstudio</span>
               </div>
 
@@ -196,7 +199,8 @@ export default function AuthPage() {
             className="w-full md:w-1/2 flex items-center justify-center px-10 py-10 bg-canvas"
           >
             <div className="w-full max-w-sm">
-              <div className="mb-6">
+              <div className="mb-6 flex items-center gap-2">
+                <img src={logo} alt="" className="h-8 w-auto" />
                 <span className="font-serif italic text-2xl font-bold text-primary">TuEstudio</span>
               </div>
 
