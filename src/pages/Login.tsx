@@ -1,14 +1,27 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { login } from '../api/auth'
 
 export default function Login() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    navigate('/search')
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await login(email, password)
+      localStorage.setItem('token', res.token)
+      navigate('/search')
+    } catch {
+      setError('Email o contraseña incorrectos.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -51,6 +64,7 @@ export default function Login() {
                     <input
                       id="email"
                       type="email"
+                      required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="tu@correo.com"
@@ -64,6 +78,7 @@ export default function Login() {
                     <input
                       id="password"
                       type="password"
+                      required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
@@ -85,11 +100,16 @@ export default function Login() {
                   </a>
                 </div>
 
+                {error && (
+                  <p className="font-sans text-body-sm text-error">{error}</p>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full flex justify-center py-3 px-4 rounded font-sans text-button text-on-primary bg-primary hover:bg-primary-active focus:outline-none transition-colors"
+                  disabled={loading}
+                  className="w-full flex justify-center py-3 px-4 rounded font-sans text-button text-on-primary bg-primary hover:bg-primary-active focus:outline-none transition-colors disabled:opacity-60"
                 >
-                  Iniciar sesión
+                  {loading ? 'Ingresando...' : 'Iniciar sesión'}
                 </button>
               </form>
 

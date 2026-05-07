@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import logo from '../assets/logo.png'
 import hero from '../assets/hero.png'
+import { login as apiLogin, register as apiRegister, initiateOAuth, initiateOAuthLogin } from '../api/auth'
+import { useAuth } from '../auth/AuthContext'
 
 type Mode = 'login' | 'register'
 type Role = 'student' | 'teacher'
@@ -9,6 +11,7 @@ type Role = 'student' | 'teacher'
 export default function AuthPage() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const { setToken } = useAuth()
   const [mode, setMode] = useState<Mode>(pathname === '/register' ? 'register' : 'login')
 
   useEffect(() => {
@@ -22,22 +25,46 @@ export default function AuthPage() {
   // Login state
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [loginLoading, setLoginLoading] = useState(false)
+  const [loginError, setLoginError] = useState<string | null>(null)
 
   // Register state
   const [role, setRole] = useState<Role | null>(null)
   const [name, setName] = useState('')
   const [regEmail, setRegEmail] = useState('')
   const [regPassword, setRegPassword] = useState('')
+  const [registerLoading, setRegisterLoading] = useState(false)
+  const [registerError, setRegisterError] = useState<string | null>(null)
 
-  function handleLogin(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
-    navigate('/search')
+    setLoginLoading(true)
+    setLoginError(null)
+    try {
+      const res = await apiLogin(email, password)
+      setToken(res.token)
+      navigate('/search')
+    } catch {
+      setLoginError('Email o contraseña incorrectos.')
+    } finally {
+      setLoginLoading(false)
+    }
   }
 
-  function handleRegister(e: React.FormEvent) {
+  async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
     if (!role) return
-    navigate('/search')
+    setRegisterLoading(true)
+    setRegisterError(null)
+    try {
+      const res = await apiRegister(name, regEmail, regPassword, role === 'student' ? 'STUDENT' : 'TEACHER')
+      setToken(res.token)
+      navigate('/search')
+    } catch {
+      setRegisterError('No se pudo crear la cuenta. Verificá que el email no esté en uso.')
+    } finally {
+      setRegisterLoading(false)
+    }
   }
 
   /*
@@ -139,11 +166,16 @@ export default function AuthPage() {
                   </a>
                 </div>
 
+                {loginError && (
+                  <p className="font-sans text-body-sm text-error">{loginError}</p>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full h-[44px] bg-primary hover:bg-primary-active text-on-primary font-sans text-button rounded-md transition-colors"
+                  disabled={loginLoading}
+                  className="w-full h-[44px] bg-primary hover:bg-primary-active text-on-primary font-sans text-button rounded-md transition-colors disabled:opacity-60"
                 >
-                  Iniciar sesión
+                  {loginLoading ? 'Ingresando...' : 'Iniciar sesión'}
                 </button>
               </form>
 
@@ -157,7 +189,11 @@ export default function AuthPage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <button className="flex justify-center items-center h-[40px] border border-hairline rounded-md bg-surface-soft hover:bg-surface-cream-strong transition-colors font-sans text-button gap-2">
+                  <button
+                    type="button"
+                    onClick={() => initiateOAuthLogin('google')}
+                    className="flex justify-center items-center h-[40px] border border-hairline rounded-md bg-surface-soft hover:bg-surface-cream-strong transition-colors font-sans text-button gap-2"
+                  >
                     <svg className="w-4 h-4" viewBox="0 0 24 24">
                       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                       <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
@@ -166,7 +202,11 @@ export default function AuthPage() {
                     </svg>
                     Google
                   </button>
-                  <button className="flex justify-center items-center h-[40px] border border-hairline rounded-md bg-surface-soft hover:bg-surface-cream-strong transition-colors font-sans text-button gap-2">
+                  <button
+                    type="button"
+                    onClick={() => initiateOAuthLogin('linkedin')}
+                    className="flex justify-center items-center h-[40px] border border-hairline rounded-md bg-surface-soft hover:bg-surface-cream-strong transition-colors font-sans text-button gap-2"
+                  >
                     <svg className="w-4 h-4 text-[#0A66C2]" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
                     </svg>
@@ -292,11 +332,16 @@ export default function AuthPage() {
                   />
                 </div>
 
+                {registerError && (
+                  <p className="font-sans text-body-sm text-error">{registerError}</p>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full h-[44px] bg-primary hover:bg-primary-active text-on-primary font-sans text-button rounded-md transition-colors"
+                  disabled={registerLoading || !role}
+                  className="w-full h-[44px] bg-primary hover:bg-primary-active text-on-primary font-sans text-button rounded-md transition-colors disabled:opacity-60"
                 >
-                  Crear cuenta
+                  {registerLoading ? 'Creando cuenta...' : 'Crear cuenta'}
                 </button>
               </form>
 
@@ -315,6 +360,7 @@ export default function AuthPage() {
                     type="button"
                     disabled={!role}
                     title={!role ? 'Seleccioná tu perfil primero' : undefined}
+                    onClick={() => role && initiateOAuth('google', role === 'student' ? 'STUDENT' : 'TUTOR')}
                     className="flex justify-center items-center h-[40px] border border-hairline rounded-md bg-surface-soft font-sans text-button gap-2 disabled:cursor-not-allowed hover:bg-surface-cream-strong transition-colors"
                   >
                     <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -329,6 +375,7 @@ export default function AuthPage() {
                     type="button"
                     disabled={!role}
                     title={!role ? 'Seleccioná tu perfil primero' : undefined}
+                    onClick={() => role && initiateOAuth('linkedin', role === 'student' ? 'STUDENT' : 'TUTOR')}
                     className="flex justify-center items-center h-[40px] border border-hairline rounded-md bg-surface-soft font-sans text-button gap-2 disabled:cursor-not-allowed hover:bg-surface-cream-strong transition-colors"
                   >
                     <svg className="w-4 h-4 text-[#0A66C2]" viewBox="0 0 24 24" fill="currentColor">
