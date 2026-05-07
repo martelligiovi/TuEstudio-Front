@@ -1,55 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import MobileNav from '../components/MobileNav'
-
-const TUTORS = [
-  {
-    id: 'sofia-r',
-    name: 'Sofia R.',
-    university: 'Universidad de Buenos Aires',
-    subjects: ['Cálculo I y II', 'Álgebra Lineal'],
-    rate: 15,
-    active: true,
-    photo:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuD3b0vO7kObSzfWzHU6eWzjq6lX6ncNV21dC-on_As_OQ0apU-2VMFCOn9rFJMarCC4o_qI9xdc-mRV2jEddTFjUmzdvoWS5qAU_n2OL5D9HWUEaoGPaObVJOv2haZ6SZqb1Bt3F0PAcLSAyLswg8Pl2J_8yQNPaNxmyGUz75W2YuN_ZSQGjGNgtA2jHP45uMT6kjYm2qq9ojZsEiIQuYlN83TxQJKT_lBXEbRhcCLGm0LD6-Q3nzEqm509lYCuuoPvx9jfALrqpg',
-  },
-  {
-    id: 'mateo-v',
-    name: 'Mateo V.',
-    university: 'Universidad Torcuato Di Tella',
-    subjects: ['Microeconomía', 'Macroeconomía'],
-    rate: 20,
-    active: true,
-    photo:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDckeNbmOh_Mzv7caRVeE9mAl_RV8_YJJ-aGVT683qgceKsGhBlGC-PRARLQsWqSFagtEcv3DNMPHp5x0FIXKiddeJBp2h7G0Q6sUKjW6YafzWDNtzeb-PBK1kNaf4IH9Prp4cmmOlViW3oNuDl_lts1ifhQMFv126Fizn4V8NV5QReoESXD0tJ8CwYnVzRXfMR1MN9DapOrMRydN8LKAgy1pm-15pP5kSXHI0B8YJ7sVav7vqM7ZjCgBG_FOGTDJdqOB4UJYpqVw',
-  },
-  {
-    id: 'valentina-c',
-    name: 'Valentina C.',
-    university: 'Universidad de San Andrés',
-    subjects: ['Derecho Constitucional', 'Ética'],
-    rate: 18,
-    active: false,
-    photo:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAPAz8-C60hruBx_90ycD1wJnETU1-EKLXp48J3S6r50R1X3wMkdB2PwqJsutQ5bs-AQW7ur1zsnzDqJKPUHpL0wXcWrnEeEDJIl-6XYV7vZ1BMSnUMHWQVYQk99moiHZ1tbfvXgsUn96j5VVENxZPWusOtWYn-k7YwWinoBARw_GbUCpESkl-lPJOsG57MRK4ojPpTkmerAEXCnt4tAig2q7ad9EWNcvqSxdRKHYqoJrIdBDJI18jzLWwjzxGMq6BVj7CjUBlBKg',
-  },
-  {
-    id: 'carlos-m',
-    name: 'Carlos M.',
-    university: 'Universidad de Buenos Aires',
-    subjects: ['Matemáticas Avanzadas', 'Estadística'],
-    rate: 22,
-    active: true,
-    photo:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBLaQ9m5XzPb8-mOqYjdeDQPy_YN5xtG3ovmHqFSqEFho6lCuLdsGLsUlg81yWUHLmMCcUAgHJFsVN1LnEoB_M6XcP0MJqQvBxlxHNqQyBf8m6-1DMMK7rXfHGPh3A8VzXCxw5MxJkR5mTFcG_VmhW2xqBr8RNPiRLmhqFKCckzCBZxhgU1x2LGr0U_yAhJrC9P2A-S6Z3kHESmHdCbhsrJ87-R3U0DtPGMaAnDHwEfnHaxIRSXmZaQr-ZD_kJVCQwrGU3dg',
-  },
-]
-
-const UNIVERSITIES = ['Universidad de Buenos Aires (UBA)', 'Universidad Torcuato Di Tella', 'Universidad de San Andrés']
-const CAREERS = ['Economía', 'Derecho', 'Ingeniería Informática', 'Administración de Empresas']
-const SUBJECTS = ['Cálculo I', 'Álgebra Lineal', 'Microeconomía', 'Derecho Constitucional']
+import { searchTutors } from '../api/tutors'
+import { getCatalog } from '../api/catalog'
+import type { TutorSummary } from '../api/types'
 
 type DropdownProps = {
   label: string
@@ -62,6 +18,10 @@ type DropdownProps = {
 function FilterDropdown({ label, placeholder, options, value, onChange }: DropdownProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState(value)
+
+  useEffect(() => {
+    setQuery(value)
+  }, [value])
 
   const filtered = options.filter((o) => o.toLowerCase().includes(query.toLowerCase()))
 
@@ -117,19 +77,52 @@ export default function Search() {
   const [minPrice, setMinPrice] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
 
+  const [tutors, setTutors] = useState<TutorSummary[]>([])
+  const [universities, setUniversities] = useState<string[]>([])
+  const [careers, setCareers] = useState<string[]>([])
+  const [subjects, setSubjects] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    getCatalog()
+      .then((data) => {
+        setUniversities(data.universities.map((u) => u.name))
+        setCareers(data.careers.map((c) => c.name))
+        setSubjects(data.subjects.map((s) => s.name))
+      })
+      .catch(() => {})
+  }, [])
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      setLoading(true)
+      setError(null)
+      searchTutors({
+        universidad: uniFilter || undefined,
+        materia: subjectFilter || undefined,
+        carrera: careerFilter || undefined,
+        minPrice: minPrice ? Number(minPrice) : undefined,
+        maxPrice: maxPrice ? Number(maxPrice) : undefined,
+      })
+        .then(setTutors)
+        .catch((err: Error) => setError(err.message))
+        .finally(() => setLoading(false))
+    }, 300)
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [uniFilter, subjectFilter, careerFilter, minPrice, maxPrice])
+
   const activeFilters = [
     uniFilter && { key: 'uni', label: uniFilter, clear: () => setUniFilter('') },
     subjectFilter && { key: 'sub', label: subjectFilter, clear: () => setSubjectFilter('') },
     careerFilter && { key: 'car', label: careerFilter, clear: () => setCareerFilter('') },
   ].filter(Boolean) as { key: string; label: string; clear: () => void }[]
-
-  const filtered = TUTORS.filter((t) => {
-    if (uniFilter && !t.university.toLowerCase().includes(uniFilter.toLowerCase())) return false
-    if (subjectFilter && !t.subjects.some((s) => s.toLowerCase().includes(subjectFilter.toLowerCase()))) return false
-    if (minPrice && t.rate < Number(minPrice)) return false
-    if (maxPrice && t.rate > Number(maxPrice)) return false
-    return true
-  })
 
   function resetFilters() {
     setUniFilter('')
@@ -153,7 +146,6 @@ export default function Search() {
             </p>
           </div>
 
-          {/* Active filters */}
           {activeFilters.length > 0 && (
             <div className="flex flex-col gap-3 mb-2">
               <h3 className="font-sans text-title-sm text-ink border-b border-hairline pb-2">
@@ -178,26 +170,25 @@ export default function Search() {
           <FilterDropdown
             label="Universidad"
             placeholder="Buscar universidad..."
-            options={UNIVERSITIES}
+            options={universities}
             value={uniFilter}
             onChange={setUniFilter}
           />
           <FilterDropdown
             label="Carrera"
             placeholder="Buscar carrera..."
-            options={CAREERS}
+            options={careers}
             value={careerFilter}
             onChange={setCareerFilter}
           />
           <FilterDropdown
             label="Materia"
             placeholder="Buscar materia..."
-            options={SUBJECTS}
+            options={subjects}
             value={subjectFilter}
             onChange={setSubjectFilter}
           />
 
-          {/* Price range */}
           <div className="flex flex-col gap-3 mt-4">
             <h3 className="font-sans text-title-sm text-ink border-b border-hairline pb-2">
               Precio (por hora)
@@ -231,18 +222,31 @@ export default function Search() {
 
         {/* Tutor grid */}
         <div className="flex-grow grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-max">
-          {filtered.length === 0 && (
+          {loading && (
+            <div className="col-span-full flex items-center justify-center py-xxl text-muted">
+              <span className="material-symbols-outlined text-[48px] animate-spin">progress_activity</span>
+            </div>
+          )}
+
+          {!loading && error && (
+            <div className="col-span-full flex flex-col items-center justify-center py-xxl text-muted">
+              <span className="material-symbols-outlined text-[48px] mb-4">error_outline</span>
+              <p className="font-sans text-body-md">Error al cargar tutores. Verificá que el servidor esté corriendo.</p>
+            </div>
+          )}
+
+          {!loading && !error && tutors.length === 0 && (
             <div className="col-span-full flex flex-col items-center justify-center py-xxl text-muted">
               <span className="material-symbols-outlined text-[48px] mb-4">search_off</span>
               <p className="font-sans text-body-md">No se encontraron tutores con esos filtros.</p>
             </div>
           )}
-          {filtered.map((tutor) => (
+
+          {!loading && !error && tutors.map((tutor) => (
             <article
               key={tutor.id}
               className="bg-surface-card rounded-lg p-xl border border-hairline flex flex-col gap-4 relative overflow-hidden group hover:shadow-[0_1px_3px_rgba(20,20,19,0.08)] transition-shadow"
             >
-              {/* Status badge */}
               <div className={`absolute top-4 right-4 flex items-center gap-1.5 ${!tutor.active && 'opacity-50'}`}>
                 <span className={`w-2 h-2 rounded-full ${tutor.active ? 'bg-success' : 'bg-muted'}`} />
                 <span className={`font-sans text-caption ${tutor.active ? 'text-success' : 'text-muted'}`}>
@@ -250,11 +254,10 @@ export default function Search() {
                 </span>
               </div>
 
-              {/* Tutor info */}
               <div className="flex items-start gap-4">
                 <div className="w-16 h-16 rounded-full overflow-hidden border border-hairline shrink-0">
                   <img
-                    src={tutor.photo}
+                    src={tutor.photoUrl}
                     alt={tutor.name}
                     className={`w-full h-full object-cover ${!tutor.active && 'grayscale-[20%]'}`}
                   />
@@ -265,7 +268,6 @@ export default function Search() {
                 </div>
               </div>
 
-              {/* Subjects */}
               <div className="flex flex-wrap gap-2 mt-2">
                 {tutor.subjects.map((s) => (
                   <span
@@ -277,10 +279,9 @@ export default function Search() {
                 ))}
               </div>
 
-              {/* Footer */}
               <div className="mt-auto pt-4 flex items-center justify-between border-t border-hairline-soft">
                 <div className="flex items-center gap-2">
-                  <span className="font-sans text-title-sm text-ink">${tutor.rate}/hr</span>
+                  <span className="font-sans text-title-sm text-ink">${tutor.hourlyRate}/hr</span>
                 </div>
                 <button
                   onClick={() => navigate(`/tutor/${tutor.id}`)}

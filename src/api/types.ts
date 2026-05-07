@@ -1,0 +1,91 @@
+export interface TutorSummary {
+  id: string
+  name: string
+  university: string
+  subjects: string[]
+  hourlyRate: number
+  active: boolean
+  photoUrl: string
+}
+
+export interface SubjectDto {
+  name: string
+  description: string
+  icon: string
+}
+
+export interface ScheduleDto {
+  days: string
+  hours: string
+}
+
+export interface PlanDto {
+  name: string
+  description: string
+  price: string
+  unit: string
+  badge: string
+  featured: boolean
+}
+
+export interface MethodologyFeatureDto {
+  label: string
+  value: boolean
+}
+
+export interface MethodologyDto {
+  intro: string
+  features: MethodologyFeatureDto[]
+}
+
+export interface TutorProfile {
+  id: string
+  name: string
+  subjectSpecialty: string
+  university: string
+  location: string
+  modalidad: string
+  rating: number
+  reviewsCount: number
+  bio: string
+  photoUrl: string
+  active: boolean
+  hourlyRate: number
+  subjects: SubjectDto[]
+  methodology: MethodologyDto
+  schedules: ScheduleDto[]
+  schedulesNote: string
+  plans: PlanDto[]
+}
+
+export interface University {
+  id: string
+  name: string
+  logo: string
+}
+
+export interface Career {
+  id: string
+  name: string
+  universityId: string
+}
+
+export interface CatalogSubject {
+  id: string
+  name: string
+  icon: string
+}
+
+export interface CatalogData {
+  universities: University[]
+  careers: Career[]
+  subjects: CatalogSubject[]
+}
+
+export interface AuthResponse {
+  token: string
+  userId: string
+  name: string
+  email: string
+  role: 'STUDENT' | 'TEACHER'
+}

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import logo from '../assets/logo.png'
 import hero from '../assets/hero.png'
+import { login as apiLogin, register as apiRegister } from '../api/auth'
+import { useAuth } from '../auth/AuthContext'
 
 type Mode = 'login' | 'register'
 type Role = 'student' | 'teacher'
@@ -9,6 +11,7 @@ type Role = 'student' | 'teacher'
 export default function AuthPage() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const { setToken } = useAuth()
   const [mode, setMode] = useState<Mode>(pathname === '/register' ? 'register' : 'login')
 
   useEffect(() => {
@@ -22,22 +25,46 @@ export default function AuthPage() {
   // Login state
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [loginLoading, setLoginLoading] = useState(false)
+  const [loginError, setLoginError] = useState<string | null>(null)
 
   // Register state
   const [role, setRole] = useState<Role | null>(null)
   const [name, setName] = useState('')
   const [regEmail, setRegEmail] = useState('')
   const [regPassword, setRegPassword] = useState('')
+  const [registerLoading, setRegisterLoading] = useState(false)
+  const [registerError, setRegisterError] = useState<string | null>(null)
 
-  function handleLogin(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
-    navigate('/search')
+    setLoginLoading(true)
+    setLoginError(null)
+    try {
+      const res = await apiLogin(email, password)
+      setToken(res.token)
+      navigate('/search')
+    } catch {
+      setLoginError('Email o contraseña incorrectos.')
+    } finally {
+      setLoginLoading(false)
+    }
   }
 
-  function handleRegister(e: React.FormEvent) {
+  async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
     if (!role) return
-    navigate('/search')
+    setRegisterLoading(true)
+    setRegisterError(null)
+    try {
+      const res = await apiRegister(name, regEmail, regPassword, role === 'student' ? 'STUDENT' : 'TEACHER')
+      setToken(res.token)
+      navigate('/search')
+    } catch {
+      setRegisterError('No se pudo crear la cuenta. Verificá que el email no esté en uso.')
+    } finally {
+      setRegisterLoading(false)
+    }
   }
 
   /*
@@ -139,11 +166,16 @@ export default function AuthPage() {
                   </a>
                 </div>
 
+                {loginError && (
+                  <p className="font-sans text-body-sm text-error">{loginError}</p>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full h-[44px] bg-primary hover:bg-primary-active text-on-primary font-sans text-button rounded-md transition-colors"
+                  disabled={loginLoading}
+                  className="w-full h-[44px] bg-primary hover:bg-primary-active text-on-primary font-sans text-button rounded-md transition-colors disabled:opacity-60"
                 >
-                  Iniciar sesión
+                  {loginLoading ? 'Ingresando...' : 'Iniciar sesión'}
                 </button>
               </form>
 
@@ -292,11 +324,16 @@ export default function AuthPage() {
                   />
                 </div>
 
+                {registerError && (
+                  <p className="font-sans text-body-sm text-error">{registerError}</p>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full h-[44px] bg-primary hover:bg-primary-active text-on-primary font-sans text-button rounded-md transition-colors"
+                  disabled={registerLoading || !role}
+                  className="w-full h-[44px] bg-primary hover:bg-primary-active text-on-primary font-sans text-button rounded-md transition-colors disabled:opacity-60"
                 >
-                  Crear cuenta
+                  {registerLoading ? 'Creando cuenta...' : 'Crear cuenta'}
                 </button>
               </form>
 

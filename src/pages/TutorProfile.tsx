@@ -1,178 +1,61 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import MobileNav from '../components/MobileNav'
-
-const TUTORS: Record<
-  string,
-  {
-    name: string
-    subject: string
-    university: string
-    location: string
-    modalidad: string
-    rating: number
-    reviews: number
-    bio: string
-    photo: string
-    materias: { name: string; desc: string; icon: string }[]
-    metodologia: {
-      intro: string
-      features: { label: string; value: boolean }[]
-    }
-    horarios: { days: string; hours: string }[]
-    horariosNote: string
-    planes: { name: string; desc: string; price: string; unit: string; badge?: string; featured?: boolean }[]
-  }
-> = {
-  'sofia-r': {
-    name: 'Sofia Rodríguez',
-    subject: 'Cálculo & Álgebra Lineal',
-    university: 'Universidad de Buenos Aires',
-    location: 'Buenos Aires',
-    modalidad: 'Híbrido',
-    rating: 4.9,
-    reviews: 38,
-    bio: 'Estudiante avanzada de Matemática en la UBA con pasión por enseñar de forma clara y estructurada. Mi enfoque no es solo que aprueben, sino que comprendan profundamente los fundamentos, desarrollando un pensamiento crítico y analítico.',
-    photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD3b0vO7kObSzfWzHU6eWzjq6lX6ncNV21dC-on_As_OQ0apU-2VMFCOn9rFJMarCC4o_qI9xdc-mRV2jEddTFjUmzdvoWS5qAU_n2OL5D9HWUEaoGPaObVJOv2haZ6SZqb1Bt3F0PAcLSAyLswg8Pl2J_8yQNPaNxmyGUz75W2YuN_ZSQGjGNgtA2jHP45uMT6kjYm2qq9ojZsEiIQuYlN83TxQJKT_lBXEbRhcCLGm0LD6-Q3nzEqm509lYCuuoPvx9jfALrqpg',
-    materias: [
-      { name: 'Cálculo I y II', desc: 'Límites, derivadas, integrales y series.', icon: 'calculate' },
-      { name: 'Álgebra Lineal', desc: 'Espacios vectoriales, matrices y autovalores.', icon: 'grid_on' },
-      { name: 'Análisis Matemático', desc: 'Convergencia, continuidad y series de Fourier.', icon: 'functions' },
-    ],
-    metodologia: {
-      intro: 'El enfoque se basa en problemas (PBL). Cada sesión comienza con un desafío práctico que resolucemos juntos, descubriendo la teoría en el proceso.',
-      features: [
-        { label: 'Resolución activa', value: true },
-        { label: 'Conceptos clave', value: true },
-        { label: 'Clase guiada', value: true },
-        { label: 'Resolución de dudas', value: true },
-      ],
-    },
-    horarios: [
-      { days: 'Lunes – Miércoles', hours: '17:00 – 21:00' },
-      { days: 'Viernes', hours: '15:00 – 19:00' },
-    ],
-    horariosNote: '* Los horarios exactos se confirman al inicio de contacto.',
-    planes: [
-      { name: 'Clase Suelta', desc: 'Sesión de 60 minutos', price: '$15', unit: '/hr' },
-      { name: 'Bono 5 Clases', desc: 'Ahorrás un 10%', price: '$65', unit: '', badge: 'Bono', featured: true },
-    ],
-  },
-  'mateo-v': {
-    name: 'Mateo Villanueva',
-    subject: 'Microeconomía & Macroeconomía',
-    university: 'Universidad Torcuato Di Tella',
-    location: 'Buenos Aires',
-    modalidad: 'Virtual',
-    rating: 4.8,
-    reviews: 24,
-    bio: 'Egresado de Economía en la UTDT, con experiencia en consultoría y enseñanza universitaria. Me especializo en hacer accesibles los modelos económicos complejos con ejemplos del mundo real y casos prácticos.',
-    photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDckeNbmOh_Mzv7caRVeE9mAl_RV8_YJJ-aGVT683qgceKsGhBlGC-PRARLQsWqSFagtEcv3DNMPHp5x0FIXKiddeJBp2h7G0Q6sUKjW6YafzWDNtzeb-PBK1kNaf4IH9Prp4cmmOlViW3oNuDl_lts1ifhQMFv126Fizn4V8NV5QReoESXD0tJ8CwYnVzRXfMR1MN9DapOrMRydN8LKAgy1pm-15pP5kSXHI0B8YJ7sVav7vqM7ZjCgBG_FOGTDJdqOB4UJYpqVw',
-    materias: [
-      { name: 'Microeconomía', desc: 'Oferta, demanda, equilibrio y teoría del consumidor.', icon: 'trending_up' },
-      { name: 'Macroeconomía', desc: 'PIB, inflación, política monetaria y fiscal.', icon: 'bar_chart' },
-      { name: 'Econometría', desc: 'Regresión lineal, series de tiempo y paneles.', icon: 'analytics' },
-    ],
-    metodologia: {
-      intro: 'Trabajo con casos reales de la economía argentina y mundial para anclar cada concepto teórico. Cada clase combina teoría, ejercicios y análisis de datos.',
-      features: [
-        { label: 'Resolución activa', value: true },
-        { label: 'Casos reales', value: true },
-        { label: 'Clase guiada', value: true },
-        { label: 'Resolución de dudas', value: true },
-      ],
-    },
-    horarios: [
-      { days: 'Martes – Jueves', hours: '18:00 – 22:00' },
-      { days: 'Sábados', hours: '10:00 – 14:00' },
-    ],
-    horariosNote: '* Los horarios exactos se confirman al inicio de contacto.',
-    planes: [
-      { name: 'Clase Suelta', desc: 'Sesión de 60 minutos', price: '$20', unit: '/hr' },
-      { name: 'Bono 5 Clases', desc: 'Ahorrás un 10%', price: '$90', unit: '', badge: 'Bono', featured: true },
-    ],
-  },
-  'valentina-c': {
-    name: 'Valentina Castillo',
-    subject: 'Derecho Constitucional & Ética',
-    university: 'Universidad de San Andrés',
-    location: 'Buenos Aires',
-    modalidad: 'Híbrido',
-    rating: 4.7,
-    reviews: 19,
-    bio: 'Abogada graduada con orientación en derecho público y constitucional. Ayudo a estudiantes a entender los fundamentos del derecho y a prepararse para los exámenes con metodología clara y casos prácticos.',
-    photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAPAz8-C60hruBx_90ycD1wJnETU1-EKLXp48J3S6r50R1X3wMkdB2PwqJsutQ5bs-AQW7ur1zsnzDqJKPUHpL0wXcWrnEeEDJIl-6XYV7vZ1BMSnUMHWQVYQk99moiHZ1tbfvXgsUn96j5VVENxZPWusOtWYn-k7YwWinoBARw_GbUCpESkl-lPJOsG57MRK4ojPpTkmerAEXCnt4tAig2q7ad9EWNcvqSxdRKHYqoJrIdBDJI18jzLWwjzxGMq6BVj7CjUBlBKg',
-    materias: [
-      { name: 'Derecho Constitucional', desc: 'Derechos fundamentales y control de constitucionalidad.', icon: 'gavel' },
-      { name: 'Ética Jurídica', desc: 'Razonamiento moral y deontología profesional.', icon: 'balance' },
-      { name: 'Derecho Procesal', desc: 'Proceso civil y penal, recursos y ejecución.', icon: 'description' },
-    ],
-    metodologia: {
-      intro: 'Trabajo con casos de jurisprudencia real para desarrollar el razonamiento jurídico. Cada sesión analiza un fallo relevante y su impacto en el ordenamiento.',
-      features: [
-        { label: 'Análisis de fallos', value: true },
-        { label: 'Conceptos clave', value: true },
-        { label: 'Clase guiada', value: true },
-        { label: 'Resolución de dudas', value: true },
-      ],
-    },
-    horarios: [
-      { days: 'Lunes – Miércoles', hours: '16:00 – 20:00' },
-      { days: 'Martes', hours: '10:00 – 13:00' },
-    ],
-    horariosNote: '* Los horarios exactos se confirman al inicio de contacto.',
-    planes: [
-      { name: 'Clase Suelta', desc: 'Sesión de 60 minutos', price: '$18', unit: '/hr' },
-      { name: 'Bono 5 Clases', desc: 'Ahorrás un 10%', price: '$80', unit: '', badge: 'Bono', featured: true },
-    ],
-  },
-  'carlos-m': {
-    name: 'Carlos Mendoza',
-    subject: 'Matemáticas Avanzadas & Física',
-    university: 'Universidad de Buenos Aires',
-    location: 'Buenos Aires',
-    modalidad: 'Híbrido',
-    rating: 4.9,
-    reviews: 120,
-    bio: 'Soy Doctor en Física Aplicada por la Universidad Computense con más de 8 años de experiencia docente. Mi objetivo no es solo que aprueben, sino que comprendan profundamente los fundamentos, desarrollando un pensamiento crítico y analítico. Creo en un aprendizaje guiado por la curiosidad, donde los errores son simplemente pasos hacia la maestría.',
-    photo: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBLaQ9m5XzPb8-mOqYjdeDQPy_YN5xtG3ovmHqFSqEFho6lCuLdsGLsUlg81yWUHLmMCcUAgHJFsVN1LnEoB_M6XcP0MJqQvBxlxHNqQyBf8m6-1DMMK7rXfHGPh3A8VzXCxw5MxJkR5mTFcG_VmhW2xqBr8RNPiRLmhqFKCckzCBZxhgU1x2LGr0U_yAhJrC9P2A-S6Z3kHESmHdCbhsrJ87-R3U0DtPGMaAnDHwEfnHaxIRSXmZaQr-ZD_kJVCQwrGU3dg',
-    materias: [
-      { name: 'Cálculo I y II', desc: 'Límites, derivadas, integrales y series.', icon: 'calculate' },
-      { name: 'Álgebra Lineal', desc: 'Espacios vectoriales, matrices y autovalores.', icon: 'grid_on' },
-      { name: 'Física General', desc: 'Mecánica clásica y electromagnetismo.', icon: 'bolt' },
-    ],
-    metodologia: {
-      intro: 'El enfoque se basa en problemas (PBL). Cada sesión comienza con un desafío práctico que resolucemos juntos, descubriendo la teoría en el proceso.',
-      features: [
-        { label: 'Resolución activa', value: true },
-        { label: 'Conceptos clave', value: true },
-        { label: 'Clase guiada', value: true },
-        { label: 'Resolución de dudas', value: true },
-      ],
-    },
-    horarios: [
-      { days: 'Lunes – Jueves', hours: '16:00 – 21:00' },
-      { days: 'Viernes', hours: '15:00 – 19:00' },
-    ],
-    horariosNote: '* Los horarios exactos se confirman al inicio del contacto.',
-    planes: [
-      { name: 'Clase Suelta', desc: 'Sesión de 60 minutos', price: '$25', unit: '/hr' },
-      { name: 'Bono 5 Clases', desc: 'Ahorrás un 10%', price: '$110', unit: '', badge: 'Bono', featured: true },
-    ],
-  },
-}
+import { getTutor, contactTutor } from '../api/tutors'
+import type { TutorProfile as TutorProfileData } from '../api/types'
 
 export default function TutorProfile() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const tutor = id ? TUTORS[id] : null
+
+  const [tutor, setTutor] = useState<TutorProfileData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const [nombre, setNombre] = useState('')
   const [telefono, setTelefono] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
-  if (!tutor) {
+  useEffect(() => {
+    if (!id) return
+    setLoading(true)
+    getTutor(id)
+      .then(setTutor)
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [id])
+
+  async function handleContact(e: React.FormEvent) {
+    e.preventDefault()
+    if (!id) return
+    setSubmitting(true)
+    setSubmitError(null)
+    try {
+      await contactTutor(id, nombre, telefono)
+      navigate('/confirmed')
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Error al enviar la solicitud')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="bg-canvas min-h-screen flex flex-col font-sans">
+        <Header />
+        <main className="flex-grow flex items-center justify-center">
+          <span className="material-symbols-outlined text-[48px] text-muted animate-spin">progress_activity</span>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  if (error || !tutor) {
     return (
       <div className="bg-canvas min-h-screen flex flex-col font-sans">
         <Header />
@@ -189,17 +72,11 @@ export default function TutorProfile() {
     )
   }
 
-  function handleContact(e: React.FormEvent) {
-    e.preventDefault()
-    navigate('/confirmed')
-  }
-
   return (
     <div className="bg-canvas text-ink min-h-screen flex flex-col font-sans">
       <Header />
 
       <main className="flex-grow w-full max-w-content mx-auto px-6 py-8 pb-section">
-        {/* Back */}
         <Link
           to="/search"
           className="inline-flex items-center gap-1 text-muted hover:text-primary font-sans text-body-sm mb-8 transition-colors"
@@ -215,15 +92,14 @@ export default function TutorProfile() {
             {/* Hero */}
             <div className="flex flex-col sm:flex-row gap-6 items-start">
               <img
-                src={tutor.photo}
+                src={tutor.photoUrl}
                 alt={tutor.name}
                 className="w-20 h-20 rounded-full object-cover border border-hairline shrink-0"
               />
               <div className="flex-1">
                 <h1 className="font-serif text-display-md text-ink leading-tight mb-1">{tutor.name}</h1>
-                <p className="font-sans text-title-sm text-muted mb-3">{tutor.subject}</p>
+                <p className="font-sans text-title-sm text-muted mb-3">{tutor.subjectSpecialty}</p>
                 <div className="flex flex-wrap items-center gap-4">
-                  {/* Rating */}
                   <div className="flex items-center gap-1">
                     <span
                       className="material-symbols-outlined text-[16px] text-accent-amber"
@@ -232,9 +108,8 @@ export default function TutorProfile() {
                       star
                     </span>
                     <span className="font-sans text-body-sm text-ink font-medium">{tutor.rating}</span>
-                    <span className="font-sans text-body-sm text-muted">({tutor.reviews} reseñas)</span>
+                    <span className="font-sans text-body-sm text-muted">({tutor.reviewsCount} reseñas)</span>
                   </div>
-                  {/* Location */}
                   <div className="flex items-center gap-1 text-muted">
                     <span className="material-symbols-outlined text-[16px]">location_on</span>
                     <span className="font-sans text-body-sm">
@@ -256,14 +131,14 @@ export default function TutorProfile() {
                   <span className="material-symbols-outlined text-[20px] text-on-dark">menu_book</span>
                   <h2 className="font-sans text-title-sm text-on-dark">Materias</h2>
                 </div>
-                {tutor.materias.map((m) => (
+                {tutor.subjects.map((m) => (
                   <div key={m.name} className="flex items-start gap-3">
                     <span className="material-symbols-outlined text-[18px] text-on-dark-soft mt-0.5 shrink-0">
                       {m.icon}
                     </span>
                     <div>
                       <p className="font-sans text-title-sm text-on-dark leading-snug">{m.name}</p>
-                      <p className="font-sans text-body-sm text-on-dark-soft mt-0.5">{m.desc}</p>
+                      <p className="font-sans text-body-sm text-on-dark-soft mt-0.5">{m.description}</p>
                     </div>
                   </div>
                 ))}
@@ -276,10 +151,10 @@ export default function TutorProfile() {
                   <h2 className="font-sans text-title-sm text-on-dark">Metodología</h2>
                 </div>
                 <p className="font-sans text-body-sm text-on-dark-soft leading-relaxed">
-                  {tutor.metodologia.intro}
+                  {tutor.methodology.intro}
                 </p>
                 <div className="border-t border-surface-dark-elevated pt-4 flex flex-col gap-2">
-                  {tutor.metodologia.features.map((f) => (
+                  {tutor.methodology.features.map((f) => (
                     <div key={f.label} className="flex items-center justify-between">
                       <span className="font-sans text-body-sm text-on-dark-soft">{f.label}</span>
                       <span
@@ -306,14 +181,14 @@ export default function TutorProfile() {
                     <h3 className="font-sans text-title-sm text-ink">Horarios Habituales</h3>
                   </div>
                   <div className="flex flex-col gap-3">
-                    {tutor.horarios.map((h) => (
+                    {tutor.schedules.map((h) => (
                       <div key={h.days} className="flex items-start justify-between gap-4">
                         <span className="font-sans text-body-sm text-muted">{h.days}</span>
                         <span className="font-sans text-body-sm text-ink font-medium text-right">{h.hours}</span>
                       </div>
                     ))}
                   </div>
-                  <p className="font-sans text-caption text-muted-soft mt-1">{tutor.horariosNote}</p>
+                  <p className="font-sans text-caption text-muted-soft mt-1">{tutor.schedulesNote}</p>
                 </div>
 
                 {/* Planes */}
@@ -323,19 +198,19 @@ export default function TutorProfile() {
                     <h3 className="font-sans text-title-sm text-ink">Planes de Estudio</h3>
                   </div>
                   <div className="flex flex-col gap-4">
-                    {tutor.planes.map((p) => (
+                    {tutor.plans.map((p) => (
                       <div
                         key={p.name}
-                        className={`flex items-center justify-between rounded-md px-md py-sm ${
+                        className={`flex items-center justify-between gap-3 rounded-md px-md py-sm ${
                           p.featured ? 'bg-surface-cream-strong' : 'bg-canvas border border-hairline'
                         }`}
                       >
-                        <div>
-                          <div className="flex items-center gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-sans text-title-sm text-ink">{p.name}</span>
                             {p.badge && (
                               <span
-                                className={`font-sans text-caption-uppercase px-2 py-0.5 rounded-full ${
+                                className={`font-sans text-caption-uppercase px-2 py-0.5 rounded-full whitespace-nowrap ${
                                   p.featured
                                     ? 'bg-primary text-on-primary'
                                     : 'bg-surface-card text-muted'
@@ -345,10 +220,10 @@ export default function TutorProfile() {
                               </span>
                             )}
                           </div>
-                          <span className="font-sans text-body-sm text-muted">{p.desc}</span>
+                          <span className="font-sans text-body-sm text-muted block">{p.description}</span>
                         </div>
-                        <div className="text-right shrink-0">
-                          <span className="font-serif text-display-sm text-ink">{p.price}</span>
+                        <div className="flex flex-col items-end shrink-0">
+                          <span className="font-serif text-display-sm text-ink leading-none">{p.price}</span>
                           {p.unit && (
                             <span className="font-sans text-body-sm text-muted">{p.unit}</span>
                           )}
@@ -399,11 +274,17 @@ export default function TutorProfile() {
                     className="h-[44px] px-3 rounded-md border border-hairline bg-canvas focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 font-sans text-body-sm text-ink transition-all placeholder:text-muted/50"
                   />
                 </div>
+
+                {submitError && (
+                  <p className="font-sans text-body-sm text-error">{submitError}</p>
+                )}
+
                 <button
                   type="submit"
-                  className="mt-2 w-full h-[48px] bg-primary hover:bg-primary-active text-on-primary font-sans text-button rounded-md transition-colors"
+                  disabled={submitting}
+                  className="mt-2 w-full h-[48px] bg-primary hover:bg-primary-active text-on-primary font-sans text-button rounded-md transition-colors disabled:opacity-60"
                 >
-                  Enviar solicitud
+                  {submitting ? 'Enviando...' : 'Enviar solicitud'}
                 </button>
               </form>
             </div>
