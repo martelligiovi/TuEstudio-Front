@@ -6,6 +6,8 @@ import Search from './pages/Search'
 import AuthPage from './pages/AuthPage'
 import TutorProfile from './pages/TutorProfile'
 import Confirmed from './pages/Confirmed'
+import OAuthCallback from './pages/OAuthCallback'
+import OAuthError from './pages/OAuthError'
 
 function GuestRoute({ children }: { children: ReactNode }) {
   const { isLoggedIn } = useAuth()
@@ -35,6 +37,8 @@ function AppRoutes() {
       />
       <Route path="/tutor/:id" element={<TutorProfile />} />
       <Route path="/confirmed" element={<Confirmed />} />
+      <Route path="/oauth2/callback" element={<OAuthCallback />} />
+      <Route path="/oauth2/error" element={<OAuthError />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
