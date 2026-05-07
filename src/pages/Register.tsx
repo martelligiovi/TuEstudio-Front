@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { register } from '../api/auth'
 
 type Role = 'student' | 'teacher'
 
@@ -9,10 +10,22 @@ export default function Register() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    navigate('/search')
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await register(name, email, password, role === 'student' ? 'STUDENT' : 'TEACHER')
+      localStorage.setItem('token', res.token)
+      navigate('/search')
+    } catch {
+      setError('No se pudo crear la cuenta. Verificá que el email no esté en uso.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -76,7 +89,6 @@ export default function Register() {
                           onChange={() => setRole(value)}
                           className="sr-only"
                         />
-                        {/* Custom radio dot */}
                         <div
                           className={`absolute top-5 right-5 w-5 h-5 rounded-full border transition-all bg-canvas ${
                             selected ? 'border-[6px] border-primary' : 'border-outline'
@@ -133,6 +145,7 @@ export default function Register() {
                     id="password"
                     type="password"
                     required
+                    minLength={8}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Mínimo 8 caracteres"
@@ -141,12 +154,17 @@ export default function Register() {
                 </div>
               </div>
 
+              {error && (
+                <p className="font-sans text-body-sm text-error">{error}</p>
+              )}
+
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full h-[48px] bg-primary hover:bg-primary-active text-on-primary font-sans text-button rounded-md transition-colors"
+                  disabled={loading}
+                  className="w-full h-[48px] bg-primary hover:bg-primary-active text-on-primary font-sans text-button rounded-md transition-colors disabled:opacity-60"
                 >
-                  Crear cuenta
+                  {loading ? 'Creando cuenta...' : 'Crear cuenta'}
                 </button>
               </div>
             </form>
