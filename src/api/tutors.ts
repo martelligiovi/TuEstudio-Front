@@ -24,9 +24,17 @@ export function getTutor(id: string): Promise<TutorProfile> {
   return apiFetch<TutorProfile>(`/api/tutors/${id}`)
 }
 
-export function contactTutor(id: string, nombre: string, telefono: string): Promise<void> {
+export interface ContactPayload {
+  nombre: string
+  telefono: string
+  universidad?: string
+  carrera?: string
+  materia?: string
+}
+
+export function contactTutor(id: string, payload: ContactPayload): Promise<void> {
   return apiFetch<void>(`/api/tutors/${id}/contact`, {
     method: 'POST',
-    body: JSON.stringify({ nombre, telefono }),
+    body: JSON.stringify(payload),
   })
 }

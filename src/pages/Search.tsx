@@ -284,7 +284,14 @@ export default function Search() {
                   <span className="font-sans text-title-sm text-ink">${tutor.hourlyRate}/hr</span>
                 </div>
                 <button
-                  onClick={() => navigate(`/tutor/${tutor.id}`)}
+                  onClick={() => {
+                    const qs = new URLSearchParams()
+                    if (uniFilter) qs.set('universidad', uniFilter)
+                    if (careerFilter) qs.set('carrera', careerFilter)
+                    if (subjectFilter) qs.set('materia', subjectFilter)
+                    const query = qs.toString()
+                    navigate(`/tutor/${tutor.id}${query ? `?${query}` : ''}`)
+                  }}
                   className="text-primary hover:text-primary-active font-sans text-button flex items-center gap-1 group-hover:translate-x-1 transition-transform"
                 >
                   Ver perfil <span className="material-symbols-outlined text-[16px]">arrow_forward</span>

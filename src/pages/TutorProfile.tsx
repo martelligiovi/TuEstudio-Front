@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import MobileNav from '../components/MobileNav'
@@ -9,6 +9,7 @@ import type { TutorProfile as TutorProfileData } from '../api/types'
 export default function TutorProfile() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   const [tutor, setTutor] = useState<TutorProfileData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -16,6 +17,9 @@ export default function TutorProfile() {
 
   const [nombre, setNombre] = useState('')
   const [telefono, setTelefono] = useState('')
+  const [universidad, setUniversidad] = useState(searchParams.get('universidad') ?? '')
+  const [carrera, setCarrera] = useState(searchParams.get('carrera') ?? '')
+  const [materia, setMateria] = useState(searchParams.get('materia') ?? '')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
@@ -34,7 +38,7 @@ export default function TutorProfile() {
     setSubmitting(true)
     setSubmitError(null)
     try {
-      await contactTutor(id, nombre, telefono)
+      await contactTutor(id, { nombre, telefono, universidad: universidad || undefined, carrera: carrera || undefined, materia: materia || undefined })
       navigate('/confirmed')
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Error al enviar la solicitud')
@@ -273,6 +277,51 @@ export default function TutorProfile() {
                     placeholder="Ej. +54 600 000 000"
                     className="h-[44px] px-3 rounded-md border border-hairline bg-canvas focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 font-sans text-body-sm text-ink transition-all placeholder:text-muted/50"
                   />
+                </div>
+
+                <div className="border-t border-hairline pt-4 flex flex-col gap-3">
+                  <p className="font-sans text-caption text-muted leading-snug">
+                    Datos de tu búsqueda — el tutor los usará para prepararse. Podés modificarlos.
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="universidad" className="font-sans text-caption text-ink font-medium">
+                      Universidad
+                    </label>
+                    <input
+                      id="universidad"
+                      type="text"
+                      value={universidad}
+                      onChange={(e) => setUniversidad(e.target.value)}
+                      placeholder="Ej. UBA"
+                      className="h-[40px] px-3 rounded-md border border-hairline bg-canvas focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 font-sans text-body-sm text-ink transition-all placeholder:text-muted/50"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="carrera" className="font-sans text-caption text-ink font-medium">
+                      Carrera
+                    </label>
+                    <input
+                      id="carrera"
+                      type="text"
+                      value={carrera}
+                      onChange={(e) => setCarrera(e.target.value)}
+                      placeholder="Ej. Ingeniería en Sistemas"
+                      className="h-[40px] px-3 rounded-md border border-hairline bg-canvas focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 font-sans text-body-sm text-ink transition-all placeholder:text-muted/50"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="materia" className="font-sans text-caption text-ink font-medium">
+                      Materia
+                    </label>
+                    <input
+                      id="materia"
+                      type="text"
+                      value={materia}
+                      onChange={(e) => setMateria(e.target.value)}
+                      placeholder="Ej. Álgebra II"
+                      className="h-[40px] px-3 rounded-md border border-hairline bg-canvas focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 font-sans text-body-sm text-ink transition-all placeholder:text-muted/50"
+                    />
+                  </div>
                 </div>
 
                 {submitError && (
