@@ -8,10 +8,21 @@ import TutorProfile from './pages/TutorProfile'
 import Confirmed from './pages/Confirmed'
 import OAuthCallback from './pages/OAuthCallback'
 import OAuthError from './pages/OAuthError'
+import TeacherDashboard from './pages/TeacherDashboard'
 
 function GuestRoute({ children }: { children: ReactNode }) {
-  const { isLoggedIn } = useAuth()
-  return isLoggedIn ? <Navigate to="/search" replace /> : <>{children}</>
+  const { isLoggedIn, isTeacher } = useAuth()
+  if (isLoggedIn) {
+    return <Navigate to={isTeacher ? '/dashboard' : '/search'} replace />
+  }
+  return <>{children}</>
+}
+
+function TeacherRoute({ children }: { children: ReactNode }) {
+  const { isLoggedIn, isTeacher } = useAuth()
+  if (!isLoggedIn) return <Navigate to="/login" replace />
+  if (!isTeacher) return <Navigate to="/search" replace />
+  return <>{children}</>
 }
 
 function AppRoutes() {
@@ -39,6 +50,14 @@ function AppRoutes() {
       <Route path="/confirmed" element={<Confirmed />} />
       <Route path="/oauth2/callback" element={<OAuthCallback />} />
       <Route path="/oauth2/error" element={<OAuthError />} />
+      <Route
+        path="/dashboard"
+        element={
+          <TeacherRoute>
+            <TeacherDashboard />
+          </TeacherRoute>
+        }
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

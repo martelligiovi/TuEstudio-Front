@@ -22,9 +22,10 @@ export default function OAuthError() {
   }
 
   const MESSAGES: Record<string, string> = {
-    invalid_role: 'El rol indicado no es válido.',
+    invalid_role: 'La sesión de registro expiró. Probá de nuevo.',
     missing_email: 'No pudimos obtener tu email desde el proveedor.',
     missing_token: 'No se recibió un token de sesión.',
+    invalid_token: 'El token recibido no es válido.',
   }
 
   const message = MESSAGES[reason] ?? 'Ocurrió un error durante el inicio de sesión social.'

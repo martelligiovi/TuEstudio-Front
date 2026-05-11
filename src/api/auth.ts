@@ -22,10 +22,10 @@ export function register(
   })
 }
 
-export function initiateOAuth(provider: 'google' | 'linkedin', role: 'STUDENT' | 'TUTOR'): void {
-  window.location.href = `${API_URL}/api/auth/social/initiate?provider=${provider}&role=${role}`
+export function initiateOAuth(provider: 'google', role: 'STUDENT' | 'TEACHER'): void {
+  window.location.href = `${API_URL}/api/auth/social/initiate?provider=${provider}&flow=register&role=${role}`
 }
 
-export function initiateOAuthLogin(provider: 'google' | 'linkedin'): void {
+export function initiateOAuthLogin(provider: 'google'): void {
   window.location.href = `${API_URL}/api/auth/social/initiate?provider=${provider}&flow=login`
 }

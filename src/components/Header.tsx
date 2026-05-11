@@ -1,15 +1,20 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import logo from '../assets/logo.png'
 import { useAuth } from '../auth/AuthContext'
 
 export default function Header() {
   const navigate = useNavigate()
-  const { isLoggedIn, logout } = useAuth()
+  const { isLoggedIn, isTeacher, session, logout } = useAuth()
 
   function handleLogout() {
     logout()
     navigate('/')
   }
+
+  const tabBase =
+    'font-sans text-button transition-colors duration-200 pb-1 border-b-2'
+  const tabActive = 'text-ink border-primary'
+  const tabIdle = 'text-muted border-transparent hover:text-ink'
 
   return (
     <header className="bg-[#fdfbf7] border-b border-hairline sticky top-0 z-40 hidden md:block">
@@ -18,6 +23,24 @@ export default function Header() {
           <img src={logo} alt="" className="h-8 w-auto" />
           <span className="font-serif italic text-2xl font-bold text-primary">TuEstudio</span>
         </Link>
+
+        {isTeacher && session && (
+          <nav className="flex items-center gap-6">
+            <NavLink
+              to="/dashboard"
+              end
+              className={({ isActive }) => `${tabBase} ${isActive ? tabActive : tabIdle}`}
+            >
+              Solicitudes
+            </NavLink>
+            <NavLink
+              to={`/tutor/${session.userId}`}
+              className={({ isActive }) => `${tabBase} ${isActive ? tabActive : tabIdle}`}
+            >
+              Mi perfil
+            </NavLink>
+          </nav>
+        )}
 
         <div className="flex items-center gap-4">
           {isLoggedIn ? (

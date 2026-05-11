@@ -90,3 +90,14 @@ export interface AuthResponse {
   email: string
   role: 'STUDENT' | 'TEACHER'
 }
+
+export interface ContactRequest {
+  id: string
+  studentName: string
+  studentPhone: string   // E.164, normalized by backend, e.g. +5491134567890
+  university?: string
+  career?: string
+  subject?: string
+  status: 'PENDING' | 'ATTENDED'
+  createdAt: string      // ISO 8601 UTC
+}

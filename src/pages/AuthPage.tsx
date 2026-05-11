@@ -11,7 +11,7 @@ type Role = 'student' | 'teacher'
 export default function AuthPage() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  const { setToken } = useAuth()
+  const { setSession } = useAuth()
   const [mode, setMode] = useState<Mode>(pathname === '/register' ? 'register' : 'login')
 
   useEffect(() => {
@@ -42,8 +42,8 @@ export default function AuthPage() {
     setLoginError(null)
     try {
       const res = await apiLogin(email, password)
-      setToken(res.token)
-      navigate('/search')
+      setSession({ token: res.token, role: res.role, userId: res.userId, name: res.name })
+      navigate(res.role === 'TEACHER' ? '/dashboard' : '/search')
     } catch {
       setLoginError('Email o contraseña incorrectos.')
     } finally {
@@ -58,8 +58,8 @@ export default function AuthPage() {
     setRegisterError(null)
     try {
       const res = await apiRegister(name, regEmail, regPassword, role === 'student' ? 'STUDENT' : 'TEACHER')
-      setToken(res.token)
-      navigate('/search')
+      setSession({ token: res.token, role: res.role, userId: res.userId, name: res.name })
+      navigate(res.role === 'TEACHER' ? '/dashboard' : '/search')
     } catch {
       setRegisterError('No se pudo crear la cuenta. Verificá que el email no esté en uso.')
     } finally {
@@ -347,7 +347,7 @@ export default function AuthPage() {
                   type="button"
                   disabled={!role}
                   title={!role ? 'Seleccioná tu perfil primero' : undefined}
-                  onClick={() => role && initiateOAuth('google', role === 'student' ? 'STUDENT' : 'TUTOR')}
+                  onClick={() => role && initiateOAuth('google', role === 'student' ? 'STUDENT' : 'TEACHER')}
                   className={`w-full flex justify-center items-center h-[40px] border border-hairline rounded-md bg-surface-soft font-sans text-button gap-2 disabled:cursor-not-allowed hover:bg-surface-cream-strong transition-colors transition-opacity duration-200 ${!role ? 'opacity-40 pointer-events-none' : ''}`}
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24">
