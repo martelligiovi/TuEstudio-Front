@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
+import { useParams, useSearchParams, Link } from 'react-router-dom'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import MobileNav from '../components/MobileNav'
@@ -8,7 +8,6 @@ import type { TutorProfile as TutorProfileData } from '../api/types'
 
 export default function TutorProfile() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
   const [tutor, setTutor] = useState<TutorProfileData | null>(null)
@@ -34,17 +33,36 @@ export default function TutorProfile() {
 
   async function handleContact(e: React.FormEvent) {
     e.preventDefault()
-    if (!id) return
+    if (!id || !tutor?.phoneNumber) {
+      setSubmitError('El tutor no tiene número de contacto disponible.')
+      return
+    }
     setSubmitting(true)
     setSubmitError(null)
     try {
-      await contactTutor(id, { nombre, telefono, universidad: universidad || undefined, carrera: carrera || undefined, materia: materia || undefined })
-      navigate('/confirmed')
-    } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Error al enviar la solicitud')
-    } finally {
-      setSubmitting(false)
+      await contactTutor(id, {
+        nombre,
+        telefono,
+        universidad: universidad || undefined,
+        carrera: carrera || undefined,
+        materia: materia || undefined,
+      })
+    } catch {
+      // no bloqueamos la apertura de WhatsApp si falla el registro
     }
+
+    const lines = [
+      `Hola ${tutor.name}, te contacto desde TuEstudio.`,
+      `Mi nombre es ${nombre}.`,
+      materia ? `Estoy buscando clases de *${materia}*.` : '',
+      carrera ? `Carrera: ${carrera}.` : '',
+      universidad ? `Universidad: ${universidad}.` : '',
+      `Mi teléfono es ${telefono}.`,
+      `¿Podríamos coordinar una sesión?`,
+    ].filter(Boolean).join('\n')
+
+    window.open(`https://wa.me/${tutor.phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(lines)}`, '_blank')
+    setSubmitting(false)
   }
 
   if (loading) {

@@ -51,6 +51,7 @@ export interface TutorProfile {
   photoUrl: string
   active: boolean
   hourlyRate: number
+  phoneNumber: string
   subjects: SubjectDto[]
   methodology: MethodologyDto
   schedules: ScheduleDto[]
