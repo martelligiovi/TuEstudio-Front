@@ -153,17 +153,23 @@ export default function TutorProfile() {
                   <span className="material-symbols-outlined text-[20px] text-on-dark">menu_book</span>
                   <h2 className="font-sans text-title-sm text-on-dark">Materias</h2>
                 </div>
-                {tutor.subjects.map((m) => (
-                  <div key={m.name} className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-[18px] text-on-dark-soft mt-0.5 shrink-0">
-                      {m.icon}
-                    </span>
-                    <div>
-                      <p className="font-sans text-title-sm text-on-dark leading-snug">{m.name}</p>
-                      <p className="font-sans text-body-sm text-on-dark-soft mt-0.5">{m.description}</p>
+                {tutor.subjects.map((m) => {
+                  const subjectName = m.canonicalName ?? m.name ?? m.id ?? 'Materia'
+
+                  return (
+                    <div key={m.id ?? subjectName} className="flex items-start gap-3">
+                      <span className="material-symbols-outlined text-[18px] text-on-dark-soft mt-0.5 shrink-0">
+                        {m.icon ?? 'menu_book'}
+                      </span>
+                      <div>
+                        <p className="font-sans text-title-sm text-on-dark leading-snug">{subjectName}</p>
+                        {m.description && (
+                          <p className="font-sans text-body-sm text-on-dark-soft mt-0.5">{m.description}</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
 
               {/* Metodología */}

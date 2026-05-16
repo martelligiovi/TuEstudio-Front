@@ -9,9 +9,11 @@ export interface TutorSummary {
 }
 
 export interface SubjectDto {
-  name: string
-  description: string
-  icon: string
+  id?: string
+  name?: string
+  canonicalName?: string
+  description?: string
+  icon?: string | null
 }
 
 export interface ScheduleDto {
