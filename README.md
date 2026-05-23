@@ -5,32 +5,52 @@ Frontend app for TuEstudio built with React, TypeScript, and Vite.
 ## Setup
 
 ```bash
-npm install
+pnpm install
 ```
 
 ## Development
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 ## Build
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 ## Cloudflare Pages
 
-Use this configuration when creating the Pages project:
+This repo is configured to deploy from GitHub Actions, so Cloudflare Pages should receive the prebuilt `dist` folder from the workflow.
 
-| Setting          | Value           |
-| ---------------- | --------------- |
-| Framework preset | Vite            |
-| Build command    | `npm run build` |
-| Output directory | `dist`          |
+If you ever switch back to Cloudflare's Git-connected build, use this configuration:
 
-Set `VITE_API_URL` in Cloudflare Pages environment variables when the backend is not served from the same origin.
+| Setting          | Value            |
+| ---------------- | ---------------- |
+| Framework preset | Vite             |
+| Build command    | `pnpm run build` |
+| Output directory | `dist`           |
+
+## GitHub Actions deployment
+
+The workflow deploys the built `dist` folder to Cloudflare Pages on every push to `main`.
+
+Configure these GitHub repository secrets:
+
+| Secret                  | Value                                      |
+| ----------------------- | ------------------------------------------ |
+| `CLOUDFLARE_API_TOKEN`  | Cloudflare API token with Pages edit scope |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID                      |
+
+Configure these GitHub repository variables:
+
+| Variable                  | Value                         |
+| ------------------------- | ----------------------------- |
+| `CLOUDFLARE_PROJECT_NAME` | Cloudflare Pages project name |
+| `VITE_API_URL`            | Backend API URL, if separate  |
+
+`VITE_API_URL` must be available in GitHub Actions because Vite injects it at build time.
 
 Example:
 
@@ -41,5 +61,5 @@ VITE_API_URL=https://api.tuestudio.com
 ## Lint
 
 ```bash
-npm run lint
+pnpm run lint
 ```
