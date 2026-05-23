@@ -26,6 +26,7 @@ function FilterDropdown({
 	const [query, setQuery] = useState(value);
 
 	useEffect(() => {
+		// eslint-disable-next-line react-hooks/set-state-in-effect
 		setQuery(value);
 	}, [value]);
 
