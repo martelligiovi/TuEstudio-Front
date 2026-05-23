@@ -34,7 +34,7 @@ export default function Header() {
               Solicitudes
             </NavLink>
             <NavLink
-              to={`/tutor/${session.userId}`}
+              to="/profile"
               className={({ isActive }) => `${tabBase} ${isActive ? tabActive : tabIdle}`}
             >
               Mi perfil

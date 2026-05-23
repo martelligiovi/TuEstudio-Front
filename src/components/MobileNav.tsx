@@ -9,12 +9,12 @@ const studentTabs = [
 
 export default function MobileNav() {
   const { pathname } = useLocation()
-  const { isTeacher, session } = useAuth()
+  const { isTeacher } = useAuth()
 
   const tabs = isTeacher
     ? [
         { to: '/dashboard', icon: 'inbox', label: 'Solicitudes' },
-        { to: `/tutor/${session?.userId ?? ''}`, icon: 'account_circle', label: 'Perfil' },
+        { to: '/profile', icon: 'account_circle', label: 'Perfil' },
       ]
     : studentTabs
 

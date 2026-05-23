@@ -9,6 +9,7 @@ import Confirmed from './pages/Confirmed'
 import OAuthCallback from './pages/OAuthCallback'
 import OAuthError from './pages/OAuthError'
 import TeacherDashboard from './pages/TeacherDashboard'
+import TeacherProfile from './pages/TeacherProfile'
 
 function GuestRoute({ children }: { children: ReactNode }) {
   const { isLoggedIn, isTeacher } = useAuth()
@@ -55,6 +56,14 @@ function AppRoutes() {
         element={
           <TeacherRoute>
             <TeacherDashboard />
+          </TeacherRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <TeacherRoute>
+            <TeacherProfile />
           </TeacherRoute>
         }
       />

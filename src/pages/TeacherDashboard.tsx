@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import { getContactRequests, markAsAttended } from '../api/teacher'
-import type { ContactRequest } from '../api/types'
+import { getContactRequests, markAsAttended, getProfile } from '../api/teacher'
+import type { ContactRequest, TutorProfileResponse } from '../api/types'
 import Header from '../components/Header'
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
@@ -163,6 +164,7 @@ export default function TeacherDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [cardErrors, setCardErrors] = useState<Record<string, string>>({})
+  const [profile, setProfile] = useState<TutorProfileResponse | null>(null)
   const pollingRef = useRef<number | null>(null)
 
   async function fetchRequests(silent = false) {
@@ -184,6 +186,9 @@ export default function TeacherDashboard() {
 
   useEffect(() => {
     fetchRequests(false)
+    getProfile().then(setProfile).catch(() => {
+      /* non-blocking — banner just won't render */
+    })
     pollingRef.current = window.setInterval(() => fetchRequests(true), 10_000)
     return () => {
       if (pollingRef.current !== null) {
@@ -239,6 +244,29 @@ export default function TeacherDashboard() {
             Respondé y coordiná tus sesiones desde acá.
           </p>
         </div>
+
+        {/* Activation banner — only when profile is incomplete */}
+        {profile && profile.missingForActivation.length > 0 && (
+          <Link
+            to="/profile"
+            className="mb-6 rounded-lg border border-accent-amber/40 bg-accent-amber/5 p-4 flex items-center gap-3 hover:bg-accent-amber/10 transition-colors"
+          >
+            <span className="material-symbols-outlined text-accent-amber text-[22px] shrink-0">
+              info
+            </span>
+            <div className="flex-1">
+              <p className="font-sans text-body-md text-ink font-medium">
+                Tu perfil todavía no está publicado
+              </p>
+              <p className="font-sans text-body-sm text-muted mt-0.5">
+                Te {profile.missingForActivation.length === 1 ? 'falta' : 'faltan'}{' '}
+                {profile.missingForActivation.length}{' '}
+                {profile.missingForActivation.length === 1 ? 'campo' : 'campos'} para que los alumnos puedan encontrarte.
+              </p>
+            </div>
+            <span className="material-symbols-outlined text-muted text-[20px]">chevron_right</span>
+          </Link>
+        )}
 
         {/* Initial loading skeleton */}
         {loading && requests.length === 0 && (
