@@ -19,6 +19,22 @@ export function getProfile(): Promise<TutorProfileResponse> {
 	return apiFetch<TutorProfileResponse>("/api/teacher/profile");
 }
 
+export type UploadProfilePhotoResponse =
+	| TutorProfileResponse
+	| { photoUrl: string };
+
+export function uploadProfilePhoto(
+	photo: File,
+): Promise<UploadProfilePhotoResponse> {
+	const body = new FormData();
+	body.append("photo", photo);
+
+	return apiFetch<UploadProfilePhotoResponse>("/api/teacher/profile/photo", {
+		method: "POST",
+		body,
+	});
+}
+
 export class UnknownSubjectIdsError extends Error {
 	constructor() {
 		super("Unknown subject ids");

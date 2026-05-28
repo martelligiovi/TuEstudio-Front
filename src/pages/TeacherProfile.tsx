@@ -4,6 +4,7 @@ import Header from "../components/Header";
 import {
 	getProfile,
 	updateProfile,
+	uploadProfilePhoto,
 	UnknownSubjectIdsError,
 } from "../api/teacher";
 import { searchSubjects } from "../api/subjects";
@@ -27,6 +28,42 @@ const ACTIVATION_LABELS: Record<MissingForActivationField, string> = {
 	schedules: "Al menos un horario",
 	hourlyRate: "Tarifa por hora mayor a 0",
 };
+
+const PROFILE_PHOTO_MAX_BYTES = 2 * 1024 * 1024;
+const PROFILE_PHOTO_ALLOWED_TYPES = new Set([
+	"image/jpeg",
+	"image/png",
+	"image/webp",
+]);
+const PROFILE_PHOTO_ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
+
+function getProfilePhotoValidationError(file: File): string | null {
+	if (file.size > PROFILE_PHOTO_MAX_BYTES) {
+		return "La imagen no puede superar los 2 MB.";
+	}
+
+	const lowerName = file.name.toLowerCase();
+	const hasAllowedType = PROFILE_PHOTO_ALLOWED_TYPES.has(file.type);
+	const hasAllowedExtension = PROFILE_PHOTO_ALLOWED_EXTENSIONS.some((ext) =>
+		lowerName.endsWith(ext),
+	);
+
+	if (file.type) {
+		if (!hasAllowedType || !hasAllowedExtension) {
+			return "Usá una imagen JPG, PNG o WEBP.";
+		}
+	} else if (!hasAllowedExtension) {
+		return "Usá una imagen JPG, PNG o WEBP.";
+	}
+
+	return null;
+}
+
+function isFullProfileResponse(
+	response: TutorProfileResponse | { photoUrl: string },
+): response is TutorProfileResponse {
+	return "missingForActivation" in response;
+}
 
 // ─── Form state model ─────────────────────────────────────────────────────────
 
@@ -251,6 +288,12 @@ export default function TeacherProfile() {
 	const [saveError, setSaveError] = useState<string | null>(null);
 	const [saveSuccess, setSaveSuccess] = useState(false);
 	const [toastMessage, setToastMessage] = useState<string | null>(null);
+	const [toastKind, setToastKind] = useState<"error" | "success">("error");
+	const [photoUploading, setPhotoUploading] = useState(false);
+	const [photoError, setPhotoError] = useState<string | null>(null);
+	const [selectedPhotoPreview, setSelectedPhotoPreview] = useState<string | null>(
+		null,
+	);
 	const [subjectQuery, setSubjectQuery] = useState("");
 	const [subjectResults, setSubjectResults] = useState<TeacherProfileSubject[]>(
 		[],
@@ -312,6 +355,11 @@ export default function TeacherProfile() {
 		return () => window.clearTimeout(timer);
 	}, [toastMessage]);
 
+	useEffect(() => {
+		if (!selectedPhotoPreview) return;
+		return () => window.URL.revokeObjectURL(selectedPhotoPreview);
+	}, [selectedPhotoPreview]);
+
 	const availableSubjectResults = useMemo(() => {
 		if (!form) return [];
 		const selectedIds = new Set(form.selectedSubjects.map((s) => s.id));
@@ -332,6 +380,7 @@ export default function TeacherProfile() {
 			window.scrollTo({ top: 0, behavior: "smooth" });
 		} catch (err) {
 			if (err instanceof UnknownSubjectIdsError) {
+				setToastKind("error");
 				setToastMessage(
 					"Algunas materias ya no están disponibles. Refrescá la página.",
 				);
@@ -393,6 +442,44 @@ export default function TeacherProfile() {
 			return;
 		}
 		setSubjectSearching(true);
+	};
+
+	const handleProfilePhotoChange = async (
+		e: React.ChangeEvent<HTMLInputElement>,
+	) => {
+		const input = e.currentTarget;
+		const file = input.files?.[0];
+		if (!file) return;
+
+		setPhotoError(null);
+		setSaveSuccess(false);
+
+		const validationError = getProfilePhotoValidationError(file);
+		if (validationError) {
+			setPhotoError(validationError);
+			input.value = "";
+			return;
+		}
+
+		setSelectedPhotoPreview(window.URL.createObjectURL(file));
+		setPhotoUploading(true);
+
+		try {
+			const updated = await uploadProfilePhoto(file);
+			if (isFullProfileResponse(updated)) {
+				setProfile(updated);
+			}
+			update("photoUrl", updated.photoUrl);
+			setSelectedPhotoPreview(null);
+			setToastKind("success");
+			setToastMessage("Foto de perfil actualizada.");
+		} catch {
+			setSelectedPhotoPreview(null);
+			setPhotoError("No pudimos subir la foto. Probá de nuevo.");
+		} finally {
+			setPhotoUploading(false);
+			input.value = "";
+		}
 	};
 
 	// ── Subjects helpers ────────────
@@ -465,14 +552,24 @@ export default function TeacherProfile() {
 			form.plans.map((p, idx) => (idx === i ? { ...p, ...patch } : p)),
 		);
 
+	const profilePhotoPreview = selectedPhotoPreview || form.photoUrl;
+
 	return (
 		<div className="min-h-screen bg-canvas">
 			<Header />
 			{toastMessage && (
-				<div className="fixed right-4 top-4 z-50 max-w-sm rounded-lg border border-error/30 bg-surface-card p-4 shadow-lg">
+				<div
+					className={`fixed right-4 top-4 z-50 max-w-sm rounded-lg border bg-surface-card p-4 shadow-lg ${
+						toastKind === "success" ? "border-success/30" : "border-error/30"
+					}`}
+				>
 					<div className="flex items-start gap-3">
-						<span className="material-symbols-outlined text-error text-[20px]">
-							error_outline
+						<span
+							className={`material-symbols-outlined text-[20px] ${
+								toastKind === "success" ? "text-success" : "text-error"
+							}`}
+						>
+							{toastKind === "success" ? "check_circle" : "error_outline"}
 						</span>
 						<p className="font-sans text-body-sm text-ink">{toastMessage}</p>
 					</div>
@@ -604,15 +701,46 @@ export default function TeacherProfile() {
 								/>
 							</Field>
 						</div>
-						<Field label="URL de foto de perfil" htmlFor="photoUrl">
-							<input
-								id="photoUrl"
-								type="url"
-								value={form.photoUrl}
-								onChange={(e) => update("photoUrl", e.target.value)}
-								placeholder="https://..."
-								className={inputClass}
-							/>
+						<Field
+							label="Foto de perfil"
+							htmlFor="profilePhoto"
+							hint="Formatos permitidos: JPG, PNG o WEBP. Tamaño máximo: 2 MB."
+						>
+							<div className="flex flex-col sm:flex-row gap-4 rounded-lg border border-hairline bg-canvas/60 p-4">
+								<div className="h-24 w-24 shrink-0 overflow-hidden rounded-full border border-hairline bg-surface-subtle flex items-center justify-center">
+									{profilePhotoPreview ? (
+										<img
+											src={profilePhotoPreview}
+											alt="Vista previa de la foto de perfil"
+											className="h-full w-full object-cover"
+										/>
+									) : (
+										<span className="material-symbols-outlined text-muted text-[40px]">
+											person
+										</span>
+									)}
+								</div>
+								<div className="flex min-w-0 flex-1 flex-col gap-2">
+									<input
+										id="profilePhoto"
+										type="file"
+										accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+										onChange={handleProfilePhotoChange}
+										disabled={photoUploading || saving}
+										className={`${inputClass} h-auto py-2 file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:font-sans file:text-button file:text-on-primary hover:file:bg-primary-active disabled:opacity-60`}
+									/>
+									{photoUploading && (
+										<p className="font-sans text-caption text-muted">
+											Subiendo foto...
+										</p>
+									)}
+									{photoError && (
+										<p className="font-sans text-caption text-error">
+											{photoError}
+										</p>
+									)}
+								</div>
+							</div>
 						</Field>
 					</Section>
 
@@ -948,10 +1076,14 @@ export default function TeacherProfile() {
 						)}
 						<button
 							type="submit"
-							disabled={saving}
+							disabled={saving || photoUploading}
 							className="h-[48px] px-6 rounded-md bg-primary text-on-primary font-sans text-button hover:bg-primary-active transition-colors disabled:opacity-60 disabled:cursor-not-allowed ml-auto"
 						>
-							{saving ? "Guardando..." : "Guardar cambios"}
+							{saving
+								? "Guardando..."
+								: photoUploading
+									? "Subiendo foto..."
+									: "Guardar cambios"}
 						</button>
 					</div>
 				</form>

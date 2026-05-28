@@ -8,9 +8,10 @@ export function apiUrl(path: string): string {
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 	const token = localStorage.getItem("token");
+	const isFormData = init?.body instanceof FormData;
 	const res = await fetch(apiUrl(path), {
 		headers: {
-			"Content-Type": "application/json",
+			...(isFormData ? {} : { "Content-Type": "application/json" }),
 			...(token ? { Authorization: `Bearer ${token}` } : {}),
 			...init?.headers,
 		},
