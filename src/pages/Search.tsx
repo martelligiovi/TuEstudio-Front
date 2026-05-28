@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import MobileNav from "../components/MobileNav";
+import TutorAvatar from "../components/TutorAvatar";
 import { searchTutors } from "../api/tutors";
 import { getCatalog } from "../api/catalog";
 import type { TutorSummary } from "../api/types";
@@ -309,13 +310,12 @@ export default function Search() {
 								</div>
 
 								<div className="flex items-start gap-4">
-									<div className="w-16 h-16 rounded-full overflow-hidden border border-hairline shrink-0">
-										<img
-											src={tutor.photoUrl}
-											alt={tutor.name}
-											className={`w-full h-full object-cover ${!tutor.active && "grayscale-[20%]"}`}
-										/>
-									</div>
+									<TutorAvatar
+										photoUrl={tutor.photoUrl}
+										name={tutor.name}
+										className="w-16 h-16 rounded-full border border-hairline shrink-0"
+										imageClassName={!tutor.active ? "grayscale-[20%]" : ""}
+									/>
 									<div>
 										<h2 className="font-serif text-display-sm text-ink leading-tight">
 											{tutor.name}

@@ -3,6 +3,7 @@ import { useParams, useSearchParams, Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import MobileNav from "../components/MobileNav";
+import TutorAvatar from "../components/TutorAvatar";
 import { getTutor, contactTutor } from "../api/tutors";
 import type { TutorProfile as TutorProfileData } from "../api/types";
 
@@ -129,10 +130,10 @@ export default function TutorProfile() {
 					<div className="lg:col-span-2 flex flex-col gap-8">
 						{/* Hero */}
 						<div className="flex flex-col sm:flex-row gap-6 items-start">
-							<img
-								src={tutor.photoUrl}
-								alt={tutor.name}
-								className="w-20 h-20 rounded-full object-cover border border-hairline shrink-0"
+							<TutorAvatar
+								photoUrl={tutor.photoUrl}
+								name={tutor.name}
+								className="w-20 h-20 rounded-full border border-hairline shrink-0"
 							/>
 							<div className="flex-1">
 								<h1 className="font-serif text-display-md text-ink leading-tight mb-1">
