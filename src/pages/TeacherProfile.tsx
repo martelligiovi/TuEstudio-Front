@@ -35,34 +35,17 @@ const PROFILE_PHOTO_ALLOWED_TYPES = new Set([
 	"image/png",
 	"image/webp",
 ]);
-const PROFILE_PHOTO_ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
 
 function getProfilePhotoValidationError(file: File): string | null {
 	if (file.size > PROFILE_PHOTO_MAX_BYTES) {
 		return "La imagen no puede superar los 2 MB.";
 	}
 
-	const lowerName = file.name.toLowerCase();
-	const hasAllowedType = PROFILE_PHOTO_ALLOWED_TYPES.has(file.type);
-	const hasAllowedExtension = PROFILE_PHOTO_ALLOWED_EXTENSIONS.some((ext) =>
-		lowerName.endsWith(ext),
-	);
-
-	if (file.type) {
-		if (!hasAllowedType || !hasAllowedExtension) {
-			return "Usá una imagen JPG, PNG o WEBP.";
-		}
-	} else if (!hasAllowedExtension) {
+	if (!PROFILE_PHOTO_ALLOWED_TYPES.has(file.type)) {
 		return "Usá una imagen JPG, PNG o WEBP.";
 	}
 
 	return null;
-}
-
-function isFullProfileResponse(
-	response: TutorProfileResponse | { photoUrl: string },
-): response is TutorProfileResponse {
-	return "missingForActivation" in response;
 }
 
 // ─── Form state model ─────────────────────────────────────────────────────────
@@ -291,6 +274,7 @@ export default function TeacherProfile() {
 	const [toastKind, setToastKind] = useState<"error" | "success">("error");
 	const [photoUploading, setPhotoUploading] = useState(false);
 	const [photoError, setPhotoError] = useState<string | null>(null);
+	const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null);
 	const [selectedPhotoPreview, setSelectedPhotoPreview] = useState<string | null>(
 		null,
 	);
@@ -444,7 +428,7 @@ export default function TeacherProfile() {
 		setSubjectSearching(true);
 	};
 
-	const handleProfilePhotoChange = async (
+	const handleProfilePhotoChange = (
 		e: React.ChangeEvent<HTMLInputElement>,
 	) => {
 		const input = e.currentTarget;
@@ -456,29 +440,50 @@ export default function TeacherProfile() {
 
 		const validationError = getProfilePhotoValidationError(file);
 		if (validationError) {
+			setSelectedPhotoFile(null);
+			setSelectedPhotoPreview(null);
 			setPhotoError(validationError);
 			input.value = "";
 			return;
 		}
 
+		setSelectedPhotoFile(file);
 		setSelectedPhotoPreview(window.URL.createObjectURL(file));
+		input.value = "";
+	};
+
+	const clearSelectedProfilePhoto = () => {
+		setSelectedPhotoFile(null);
+		setSelectedPhotoPreview(null);
+		setPhotoError(null);
+	};
+
+	const handleProfilePhotoUpload = async () => {
+		if (!selectedPhotoFile) return;
+
 		setPhotoUploading(true);
+		setPhotoError(null);
+		setSaveSuccess(false);
 
 		try {
-			const updated = await uploadProfilePhoto(file);
-			if (isFullProfileResponse(updated)) {
-				setProfile(updated);
-			}
+			const updated = await uploadProfilePhoto(selectedPhotoFile);
+			setProfile(updated);
 			update("photoUrl", updated.photoUrl);
+			setSelectedPhotoFile(null);
 			setSelectedPhotoPreview(null);
 			setToastKind("success");
 			setToastMessage("Foto de perfil actualizada.");
-		} catch {
-			setSelectedPhotoPreview(null);
-			setPhotoError("No pudimos subir la foto. Probá de nuevo.");
+		} catch (err) {
+			const msg = err instanceof Error && err.message ? err.message : "";
+			setPhotoError(
+				msg.includes("401") || msg.includes("403")
+					? "No tenés permisos para subir esta foto. Volvé a iniciar sesión."
+					: msg.includes("400")
+						? "El archivo no cumple con los requisitos. Elegí una imagen JPG, PNG o WEBP de hasta 2 MB."
+						: "No pudimos subir la foto. Probá de nuevo.",
+			);
 		} finally {
 			setPhotoUploading(false);
-			input.value = "";
 		}
 	};
 
@@ -720,16 +725,41 @@ export default function TeacherProfile() {
 										</span>
 									)}
 								</div>
-								<div className="flex min-w-0 flex-1 flex-col gap-2">
+								<div className="flex min-w-0 flex-1 flex-col gap-3">
 									<input
 										id="profilePhoto"
 										type="file"
-										accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+										accept="image/jpeg,image/png,image/webp"
 										onChange={handleProfilePhotoChange}
 										disabled={photoUploading || saving}
 										className={`${inputClass} h-auto py-2 file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:font-sans file:text-button file:text-on-primary hover:file:bg-primary-active disabled:opacity-60`}
 									/>
-									{photoUploading && (
+									{selectedPhotoFile && (
+										<div className="flex flex-col sm:flex-row sm:items-center gap-2">
+											<p className="font-sans text-caption text-muted sm:flex-1">
+												Vista previa lista. Subí la foto para guardarla en tu perfil.
+											</p>
+											<div className="flex gap-2">
+												<button
+													type="button"
+													onClick={handleProfilePhotoUpload}
+													disabled={photoUploading || saving}
+													className="h-[36px] px-3 rounded-md bg-primary text-on-primary font-sans text-button hover:bg-primary-active transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+												>
+													{photoUploading ? "Subiendo..." : "Subir foto"}
+												</button>
+												<button
+													type="button"
+													onClick={clearSelectedProfilePhoto}
+													disabled={photoUploading}
+													className="h-[36px] px-3 rounded-md border border-hairline text-muted hover:text-ink font-sans text-button transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+												>
+													Cancelar
+												</button>
+											</div>
+										</div>
+									)}
+									{photoUploading && !selectedPhotoFile && (
 										<p className="font-sans text-caption text-muted">
 											Subiendo foto...
 										</p>

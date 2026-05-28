@@ -19,18 +19,12 @@ export function getProfile(): Promise<TutorProfileResponse> {
 	return apiFetch<TutorProfileResponse>("/api/teacher/profile");
 }
 
-export type UploadProfilePhotoResponse =
-	| TutorProfileResponse
-	| { photoUrl: string };
-
-export function uploadProfilePhoto(
-	photo: File,
-): Promise<UploadProfilePhotoResponse> {
+export function uploadProfilePhoto(photo: File): Promise<TutorProfileResponse> {
 	const body = new FormData();
-	body.append("photo", photo);
+	body.append("file", photo);
 
-	return apiFetch<UploadProfilePhotoResponse>("/api/teacher/profile/photo", {
-		method: "POST",
+	return apiFetch<TutorProfileResponse>("/api/teacher/profile/photo", {
+		method: "PUT",
 		body,
 	});
 }
