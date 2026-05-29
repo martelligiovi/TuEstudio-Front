@@ -24,6 +24,7 @@ export default function TutorProfile() {
 	const [materia, setMateria] = useState(searchParams.get("materia") ?? "");
 	const [submitting, setSubmitting] = useState(false);
 	const [submitError, setSubmitError] = useState<string | null>(null);
+	const [photoExpanded, setPhotoExpanded] = useState(false);
 
 	useEffect(() => {
 		if (!id) return;
@@ -34,6 +35,17 @@ export default function TutorProfile() {
 			.catch((err: Error) => setError(err.message))
 			.finally(() => setLoading(false));
 	}, [id]);
+
+	useEffect(() => {
+		if (!photoExpanded) return;
+
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === "Escape") setPhotoExpanded(false);
+		};
+
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [photoExpanded]);
 
 	async function handleContact(e: React.FormEvent) {
 		e.preventDefault();
@@ -116,6 +128,35 @@ export default function TutorProfile() {
 		<div className="bg-canvas text-ink min-h-screen flex flex-col font-sans">
 			<Header />
 
+			{photoExpanded && (
+				<div
+					className="fixed inset-0 z-50 bg-ink/75 backdrop-blur-sm flex items-center justify-center px-6"
+					onClick={() => setPhotoExpanded(false)}
+					role="dialog"
+					aria-modal="true"
+					aria-label={`Foto ampliada de ${tutor.name}`}
+				>
+					<div
+						className="relative max-w-[min(82vw,560px)] w-full"
+						onClick={(event) => event.stopPropagation()}
+					>
+						<button
+							type="button"
+							onClick={() => setPhotoExpanded(false)}
+							aria-label="Cerrar foto ampliada"
+							className="absolute -right-3 -top-3 z-10 h-10 w-10 rounded-full bg-surface-card text-ink border border-hairline shadow-lg flex items-center justify-center hover:text-primary transition-colors"
+						>
+							<span className="material-symbols-outlined text-[22px]">close</span>
+						</button>
+						<TutorAvatar
+							photoUrl={tutor.photoUrl}
+							name={tutor.name}
+							className="aspect-square w-full rounded-full border border-on-dark/20 shadow-2xl"
+						/>
+					</div>
+				</div>
+			)}
+
 			<main className="flex-grow w-full max-w-content mx-auto px-6 py-8 pb-section">
 				<Link
 					to="/search"
@@ -132,11 +173,18 @@ export default function TutorProfile() {
 					<div className="lg:col-span-2 flex flex-col gap-8">
 						{/* Hero */}
 						<div className="flex flex-col sm:flex-row gap-6 items-start">
-							<TutorAvatar
-								photoUrl={tutor.photoUrl}
-								name={tutor.name}
-								className="w-20 h-20 rounded-full border border-hairline shrink-0"
-							/>
+							<button
+								type="button"
+								onClick={() => setPhotoExpanded(true)}
+								aria-label={`Ampliar foto de ${tutor.name}`}
+								className="group rounded-full shrink-0 focus:outline-none focus:ring-4 focus:ring-primary/15"
+							>
+								<TutorAvatar
+									photoUrl={tutor.photoUrl}
+									name={tutor.name}
+									className="w-32 h-32 sm:w-36 sm:h-36 rounded-full border border-hairline shadow-sm transition-transform group-hover:scale-[1.03]"
+								/>
+							</button>
 							<div className="flex-1">
 								<h1 className="font-serif text-display-md text-ink leading-tight mb-1">
 									{tutor.name}
