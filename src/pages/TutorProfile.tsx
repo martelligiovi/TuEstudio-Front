@@ -110,6 +110,8 @@ export default function TutorProfile() {
 		);
 	}
 
+	const formattedHourlyRate = `$${tutor.hourlyRate.toLocaleString("es-AR")}`;
+
 	return (
 		<div className="bg-canvas text-ink min-h-screen flex flex-col font-sans">
 			<Header />
@@ -295,6 +297,24 @@ export default function TutorProfile() {
 										</h3>
 									</div>
 									<div className="flex flex-col gap-4">
+										<div className="flex items-center justify-between gap-3 rounded-md bg-canvas border border-hairline px-md py-sm">
+											<div className="flex-1 min-w-0">
+												<span className="font-sans text-title-sm text-ink">
+													Clase por hora
+												</span>
+												<span className="font-sans text-body-sm text-muted block">
+													Precio base de una clase individual
+												</span>
+											</div>
+											<div className="flex flex-col items-end shrink-0">
+												<span className="font-serif text-display-sm text-ink leading-none">
+													{formattedHourlyRate}
+												</span>
+												<span className="font-sans text-body-sm text-muted">
+													por hora
+												</span>
+											</div>
+										</div>
 										{tutor.plans.map((p) => (
 											<div
 												key={p.name}
