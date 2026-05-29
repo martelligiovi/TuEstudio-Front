@@ -597,12 +597,27 @@ export default function TeacherProfile() {
 						</span>
 						Volver al dashboard
 					</Link>
-					<h1 className="font-serif text-display-md text-ink mb-1">
-						Mi perfil
-					</h1>
-					<p className="font-sans text-body-md text-muted">
-						Así te verán los alumnos cuando aparezcas en las búsquedas.
-					</p>
+					<div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+						<div>
+							<h1 className="font-serif text-display-md text-ink mb-1">
+								Mi perfil
+							</h1>
+							<p className="font-sans text-body-md text-muted">
+								Así te verán los alumnos cuando aparezcas en las búsquedas.
+							</p>
+						</div>
+						{session && (
+							<Link
+								to={`/tutor/${session.userId}`}
+								className="inline-flex items-center justify-center gap-1.5 h-[40px] px-4 rounded-md border border-hairline bg-surface-card text-ink hover:text-primary hover:border-primary/40 font-sans text-button transition-colors sm:shrink-0"
+							>
+								<span className="material-symbols-outlined text-[18px]">
+									visibility
+								</span>
+								Ver perfil público
+							</Link>
+						)}
+					</div>
 				</div>
 
 				{/* Activation status */}
@@ -1111,22 +1126,11 @@ export default function TeacherProfile() {
 					</Section>
 
 					{/* ── Submit ─────────────────────────────────────── */}
-					<div className="flex items-center justify-between gap-4 pt-2">
-						{session && (
-							<Link
-								to={`/tutor/${session.userId}`}
-								className="font-sans text-button text-muted hover:text-primary transition-colors inline-flex items-center gap-1"
-							>
-								<span className="material-symbols-outlined text-[18px]">
-									visibility
-								</span>
-								Ver perfil público
-							</Link>
-						)}
+					<div className="flex items-center justify-end gap-4 pt-2">
 						<button
 							type="submit"
 							disabled={saving || photoUploading}
-							className="h-[48px] px-6 rounded-md bg-primary text-on-primary font-sans text-button hover:bg-primary-active transition-colors disabled:opacity-60 disabled:cursor-not-allowed ml-auto"
+							className="h-[48px] px-6 rounded-md bg-primary text-on-primary font-sans text-button hover:bg-primary-active transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
 						>
 							{saving
 								? "Guardando..."
