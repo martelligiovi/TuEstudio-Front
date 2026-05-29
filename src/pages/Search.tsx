@@ -8,6 +8,8 @@ import { searchTutors } from "../api/tutors";
 import { getCatalog } from "../api/catalog";
 import type { TutorSummary } from "../api/types";
 
+const LOCKED_UNIVERSITY = "UP";
+
 type DropdownProps = {
 	label: string;
 	placeholder: string;
@@ -83,9 +85,8 @@ export default function Search() {
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
 
-	const [uniFilter, setUniFilter] = useState(
-		searchParams.get("universidad") || "",
-	);
+	const uniFilter = LOCKED_UNIVERSITY;
+	const [showUniversityNotice, setShowUniversityNotice] = useState(false);
 	const [subjectFilter, setSubjectFilter] = useState(
 		searchParams.get("materia") || "",
 	);
@@ -94,7 +95,6 @@ export default function Search() {
 	const [maxPrice, setMaxPrice] = useState("");
 
 	const [tutors, setTutors] = useState<TutorSummary[]>([]);
-	const [universities, setUniversities] = useState<string[]>([]);
 	const [careers, setCareers] = useState<string[]>([]);
 	const [subjects, setSubjects] = useState<string[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -103,7 +103,6 @@ export default function Search() {
 	useEffect(() => {
 		getCatalog()
 			.then((data) => {
-				setUniversities(data.universities.map((u) => u.name));
 				setCareers(data.careers.map((c) => c.name));
 				setSubjects(data.subjects.map((s) => s.name));
 			})
@@ -135,11 +134,6 @@ export default function Search() {
 	}, [uniFilter, subjectFilter, careerFilter, minPrice, maxPrice]);
 
 	const activeFilters = [
-		uniFilter && {
-			key: "uni",
-			label: uniFilter,
-			clear: () => setUniFilter(""),
-		},
 		subjectFilter && {
 			key: "sub",
 			label: subjectFilter,
@@ -153,7 +147,6 @@ export default function Search() {
 	].filter(Boolean) as { key: string; label: string; clear: () => void }[];
 
 	function resetFilters() {
-		setUniFilter("");
 		setSubjectFilter("");
 		setCareerFilter("");
 		setMinPrice("");
@@ -172,8 +165,8 @@ export default function Search() {
 							Buscar Tutores
 						</h1>
 						<p className="font-sans text-body-sm text-muted">
-							Descubrí socios de pensamiento en todas las materias y
-							universidades.
+							Descubrí socios de pensamiento en UP y filtrá por materia o
+							carrera.
 						</p>
 					</div>
 
@@ -203,13 +196,30 @@ export default function Search() {
 						</div>
 					)}
 
-					<FilterDropdown
-						label="Universidad"
-						placeholder="Buscar universidad..."
-						options={universities}
-						value={uniFilter}
-						onChange={setUniFilter}
-					/>
+					<div className="flex flex-col gap-3 mt-4">
+						<h3 className="font-sans text-title-sm text-ink border-b border-hairline pb-2">
+							Universidad
+						</h3>
+						{showUniversityNotice && (
+							<p
+								id="search-university-notice"
+								role="status"
+								className="rounded-md border border-accent-amber/40 bg-accent-amber/5 px-3 py-2 font-sans text-caption text-ink"
+							>
+								Por ahora solo se puede poner UP.
+							</p>
+						)}
+						<input
+							value={LOCKED_UNIVERSITY}
+							readOnly
+							onClick={() => setShowUniversityNotice(true)}
+							onFocus={() => setShowUniversityNotice(true)}
+							aria-describedby={
+								showUniversityNotice ? "search-university-notice" : undefined
+							}
+							className="bg-surface-subtle border border-hairline rounded-md px-3 py-2 w-full font-sans text-body-sm text-muted cursor-not-allowed focus:border-primary focus:ring-2 focus:ring-primary/15 outline-none"
+						/>
+					</div>
 					<FilterDropdown
 						label="Carrera"
 						placeholder="Buscar carrera..."

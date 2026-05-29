@@ -35,6 +35,7 @@ const PROFILE_PHOTO_ALLOWED_TYPES = new Set([
 	"image/png",
 	"image/webp",
 ]);
+const LOCKED_UNIVERSITY = "UP";
 
 function getProfilePhotoValidationError(file: File): string | null {
 	if (file.size > PROFILE_PHOTO_MAX_BYTES) {
@@ -77,7 +78,7 @@ function profileToForm(p: TutorProfileResponse): FormState {
 	return {
 		name: p.name ?? "",
 		subjectSpecialty: p.subjectSpecialty ?? "",
-		university: p.university ?? "",
+		university: LOCKED_UNIVERSITY,
 		location: p.location ?? "",
 		modalidad: p.modalidad ?? "",
 		bio: p.bio ?? "",
@@ -96,7 +97,7 @@ function formToPayload(f: FormState): UpdateTutorProfileRequest {
 	return {
 		name: f.name.trim(),
 		subjectSpecialty: f.subjectSpecialty.trim(),
-		university: f.university.trim(),
+		university: LOCKED_UNIVERSITY,
 		location: f.location.trim(),
 		modalidad: f.modalidad.trim(),
 		bio: f.bio.trim(),
@@ -275,10 +276,11 @@ export default function TeacherProfile() {
 	const [photoUploading, setPhotoUploading] = useState(false);
 	const [photoError, setPhotoError] = useState<string | null>(null);
 	const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null);
-	const [selectedPhotoPreview, setSelectedPhotoPreview] = useState<string | null>(
-		null,
-	);
+	const [selectedPhotoPreview, setSelectedPhotoPreview] = useState<
+		string | null
+	>(null);
 	const [subjectQuery, setSubjectQuery] = useState("");
+	const [showUniversityNotice, setShowUniversityNotice] = useState(false);
 	const [subjectResults, setSubjectResults] = useState<TeacherProfileSubject[]>(
 		[],
 	);
@@ -428,9 +430,7 @@ export default function TeacherProfile() {
 		setSubjectSearching(true);
 	};
 
-	const handleProfilePhotoChange = (
-		e: React.ChangeEvent<HTMLInputElement>,
-	) => {
+	const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const input = e.currentTarget;
 		const file = input.files?.[0];
 		if (!file) return;
@@ -559,6 +559,10 @@ export default function TeacherProfile() {
 
 	const profilePhotoPreview = selectedPhotoPreview || form.photoUrl;
 
+	const showLockedUniversityNotice = () => {
+		setShowUniversityNotice(true);
+	};
+
 	return (
 		<div className="min-h-screen bg-canvas">
 			<Header />
@@ -660,12 +664,26 @@ export default function TeacherProfile() {
 						</Field>
 						<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 							<Field label="Universidad" htmlFor="university">
+								{showUniversityNotice && (
+									<p
+										id="university-notice"
+										role="status"
+										className="rounded-md border border-accent-amber/40 bg-accent-amber/5 px-3 py-2 font-sans text-caption text-ink"
+									>
+										Por ahora solo se puede poner UP.
+									</p>
+								)}
 								<input
 									id="university"
 									type="text"
-									value={form.university}
-									onChange={(e) => update("university", e.target.value)}
-									className={inputClass}
+									value={LOCKED_UNIVERSITY}
+									readOnly
+									onClick={showLockedUniversityNotice}
+									onFocus={showLockedUniversityNotice}
+									aria-describedby={
+										showUniversityNotice ? "university-notice" : undefined
+									}
+									className={`${inputClass} cursor-not-allowed bg-surface-subtle text-muted`}
 								/>
 							</Field>
 							<Field label="Ubicación" htmlFor="location">
@@ -737,7 +755,8 @@ export default function TeacherProfile() {
 									{selectedPhotoFile && (
 										<div className="flex flex-col sm:flex-row sm:items-center gap-2">
 											<p className="font-sans text-caption text-muted sm:flex-1">
-												Vista previa lista. Subí la foto para guardarla en tu perfil.
+												Vista previa lista. Subí la foto para guardarla en tu
+												perfil.
 											</p>
 											<div className="flex gap-2">
 												<button
